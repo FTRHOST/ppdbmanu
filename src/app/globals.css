@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 48 8% 95%; /* Light Beige/Gray */
+    --foreground: 145 63% 20%; /* Dark Green */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 145 63% 20%; /* Dark Green */
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 145 63% 20%; /* Dark Green */
+    --primary: 145 63% 49%; /* Medium Green */
+    --primary-foreground: 0 0% 100%; /* White */
+    --secondary: 145 20% 90%; /* Lighter Green/Gray */
+    --secondary-foreground: 145 63% 30%; /* Darker Green */
+    --muted: 145 20% 90%; /* Lighter Green/Gray */
+    --muted-foreground: 145 63% 40%; /* Medium-Dark Green */
+    --accent: 45 100% 51%; /* Gold */
+    --accent-foreground: 145 63% 20%; /* Dark Green */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 145 20% 85%; /* Light Green/Gray Border */
+    --input: 145 20% 85%; /* Light Green/Gray Input */
+    --ring: 45 100% 51%; /* Gold Ring */
+    --chart-1: 145 70% 45%; /* Green shades */
+    --chart-2: 145 60% 55%;
+    --chart-3: 145 50% 65%;
+    --chart-4: 45 90% 60%; /* Gold shades */
+    --chart-5: 45 80% 70%;
+    --radius: 0.5rem;
+
+    /* Sidebar specific colors - adjust as needed */
+    --sidebar-background: 145 20% 96%; /* Slightly different light green/gray */
+    --sidebar-foreground: 145 63% 25%; /* Dark Green */
+    --sidebar-primary: 145 63% 49%; /* Medium Green */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: 145 40% 88%; /* Lighter Green Accent */
+    --sidebar-accent-foreground: 145 63% 25%; /* Dark Green */
+    --sidebar-border: 145 20% 85%; /* Light Green/Gray Border */
+    --sidebar-ring: 45 100% 51%; /* Gold Ring */
+  }
+
+  .dark {
+    /* Define dark mode colors if needed, otherwise keep light mode defaults */
+    --background: 145 10% 10%; /* Dark Greenish Background */
+    --foreground: 145 15% 95%; /* Light Greenish Text */
+    --card: 145 10% 15%; /* Dark Card */
+    --card-foreground: 145 15% 95%;
+    --popover: 145 10% 15%;
+    --popover-foreground: 145 15% 95%;
+    --primary: 145 63% 55%; /* Brighter Green for Dark Mode */
+    --primary-foreground: 145 63% 15%; /* Dark Green on Primary */
+    --secondary: 145 15% 25%; /* Darker Secondary */
+    --secondary-foreground: 145 15% 90%; /* Lighter Secondary Text */
+    --muted: 145 15% 25%;
+    --muted-foreground: 145 15% 60%;
+    --accent: 45 100% 60%; /* Brighter Gold */
+    --accent-foreground: 45 100% 10%; /* Dark text on Gold */
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 145 15% 30%;
+    --input: 145 15% 30%;
+    --ring: 45 100% 60%; /* Brighter Gold Ring */
+    --chart-1: 145 70% 55%;
+    --chart-2: 145 60% 65%;
+    --chart-3: 145 50% 75%;
+    --chart-4: 45 90% 70%;
+    --chart-5: 45 80% 80%;
+
+    --sidebar-background: 145 10% 12%; /* Dark Sidebar */
+    --sidebar-foreground: 145 15% 90%;
+    --sidebar-primary: 145 63% 55%; /* Brighter Green */
+    --sidebar-primary-foreground: 145 63% 15%;
+    --sidebar-accent: 145 15% 28%; /* Darker Accent */
+    --sidebar-accent-foreground: 145 15% 90%;
+    --sidebar-border: 145 15% 30%;
+    --sidebar-ring: 45 100% 60%; /* Brighter Gold */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
