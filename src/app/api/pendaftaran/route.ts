@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '../../../config/enterprise'; // Pastikan path ini benar
+import db from '../../../config/enterprise';
+import { formatPendaftaranId } from '../../../utils/formatId'; // Import fungsi
 
 // Definisikan interface untuk data pendaftaran (contoh)
 interface PendaftaranData {
@@ -110,8 +111,11 @@ export async function POST(req: NextRequest) {
             // Dapatkan ID pendaftaran yang baru diinsert
             const insertId = (result as any).insertId;
 
-            // Kembalikan respons sukses dengan ID
-            return NextResponse.json({ message: 'Pendaftaran berhasil', id: insertId }, { status: 201 });
+            // Format ID pendaftaran
+            const pendaftaranId = formatPendaftaranId(insertId);
+
+            // Kembalikan respons sukses dengan ID yang diformat
+            return NextResponse.json({ message: 'Pendaftaran berhasil', id: pendaftaranId }, { status: 201 });
         } finally {
             // Pastikan untuk melepaskan koneksi setelah digunakan
             connection.release();
