@@ -1,4 +1,3 @@
-
 'use client';
 
 //import database
@@ -135,50 +134,50 @@ const FormPendaftaranClient = () => {
     const [mounted, setMounted] = useState(false);
     const [tempatTanggalLahir, setTempatTanggalLahir] = useState<string | null>(null);
     const [alamatLengkap, setAlamatLengkap] = useState<string | null>(null);
+    const [formData, setFormData] = useState<FormSchemaType>({
+        rekomendasiPendaftaran: '',
+        jalurPendaftaran: undefined,
+        programPeminatan: undefined,
+        nama: '',
+        jenisKelamin: undefined,
+        tempatLahir: '',
+        tanggalLahir: undefined,
+        noHp: '',
+        tinggal: undefined,
+        dukuhJalan: '',
+        desa: '',
+        rt: '',
+        rw: '',
+        kecamatan: '',
+        kabupaten: '',
+        provinsi: '',
+        namaAyah: '',
+        pendidikanAyah: undefined,
+        pekerjaanAyah: '',
+        namaIbu: '',
+        pendidikanIbu: undefined,
+        pekerjaanIbu: '',
+        alamatOrangtua: '',
+        noHpAyah: '',
+        noHpIbu: '',
+        punyaSaudaraDiMansaba: undefined,
+        namaWali: '',
+        hubunganWali: '',
+        pendidikanWali: undefined,
+        pekerjaanWali: '',
+        alamatWali: '',
+        noHpWali: '',
+        namaSekolahAsal: '',
+        alamatSekolahAsal: '',
+        nisn: '',
+        punyaPiagam: undefined,
+        motivasi: '',
+    });
 
     const form = useForm<FormSchemaType>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            rekomendasiPendaftaran: '',
-            jalurPendaftaran: undefined,
-            programPeminatan: undefined,
-            nama: '',
-            jenisKelamin: undefined,
-            tempatLahir: '',
-            tanggalLahir: undefined, // Default date to undefined
-            noHp: '',
-            tinggal: undefined,
-            dukuhJalan: '',
-            desa: '',
-            rt: '',
-            rw: '',
-            kecamatan: '',
-            kabupaten: '',
-            provinsi: '',
-            namaAyah: '',
-            pendidikanAyah: undefined,
-            pekerjaanAyah: '',
-            namaIbu: '',
-            pendidikanIbu: undefined,
-            pekerjaanIbu: '',
-            alamatOrangtua: '',
-            noHpAyah: '',
-            noHpIbu: '',
-            punyaSaudaraDiMansaba: undefined,
-            namaWali: '',
-            hubunganWali: '',
-            pendidikanWali: undefined,
-            pekerjaanWali: '',
-            alamatWali: '',
-            noHpWali: '',
-            namaSekolahAsal: '',
-            alamatSekolahAsal: '',
-            nisn: '',
-            punyaPiagam: undefined,
-            motivasi: '',
-        },
+        defaultValues: formData,
     });
-
 
     // Watch form fields to update derived values
     const watchedTempatLahir = form.watch('tempatLahir');
@@ -213,7 +212,6 @@ const FormPendaftaranClient = () => {
         }
     }, [watchedTempatLahir, watchedTanggalLahir, mounted]);
 
-
     // Effect for Alamat Lengkap - runs only on client after mount
     useEffect(() => {
         if (!mounted) return; // Don't run before mount
@@ -228,6 +226,27 @@ const FormPendaftaranClient = () => {
         ];
         setAlamatLengkap(parts.filter(Boolean).join(', '));
     }, [watchedDukuhJalan, watchedDesa, watchedRt, watchedRw, watchedKecamatan, watchedKabupaten, watchedProvinsi, mounted]);
+
+    // Effect to load saved data from localStorage
+    useEffect(() => {
+        const savedData = localStorage.getItem('formData');
+        if (savedData) {
+            setFormData(JSON.parse(savedData));
+        }
+    }, []);
+
+    // Effect to save data to localStorage on change
+    useEffect(() => {
+        localStorage.setItem('formData', JSON.stringify(formData));
+    }, [formData]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prevData => ({
+            ...prevData,
+            [name]: value,
+        }));
+    };
 
     // Handle form submission
     async function onSubmit(values: FormSchemaType) {
