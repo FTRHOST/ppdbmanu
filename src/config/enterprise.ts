@@ -76,6 +76,8 @@ async function checkAndCreateTable() {
       `);
       console.log('Tabel `pendaftaran` berhasil dibuat.');
 
+      
+
        // Buat fungsi generateNomorPendaftaran
       console.log('Membuat fungsi `generateNomorPendaftaran`...');
       await connection.execute(`
@@ -102,7 +104,7 @@ async function checkAndCreateTable() {
       console.log('Fungsi `generateNomorPendaftaran` berhasil dibuat.');
 
       // Buat trigger generateNomorPendaftaranBeforeInsert
-      console.log('Membuat trigger `generateNomorPendaftaranBeforeInsert`...');
+      console.log('Membuat trigger `generateNomorPendaftaranBeforeInset`...');
       await connection.execute(`
           CREATE TRIGGER generateNomorPendaftaranBeforeInsert
           BEFORE INSERT ON pendaftaran
@@ -149,6 +151,31 @@ async function checkAndCreateTable() {
           `);
         console.log('Fungsi `generateNomorPendaftaran` berhasil dibuat.');
       }
+
+            // Tambahkan logika untuk membuat fungsi generateNomorPendaftaran jika belum ada
+            const [daftarUlang] = await connection.query<mysql.RowDataPacket[]>('SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?', [dbConfig.database, 'daftar_ulang']);
+            if (daftarUlang.length === 0) {
+              console.log('Table `daftar_ulang` tidak ditemukan. Membuat table...');
+              await connection.execute(`
+                CREATE TABLE daftar_ulang (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  pendaftarId VARCHAR(255) NOT NULL,
+                  nomorDaftarUlang VARCHAR(255) NOT NULL,
+                  tanggalDaftarUlang DATE NOT NULL,
+                  kelengkapanKK BOOLEAN NOT NULL DEFAULT FALSE,
+                  kelengkapanSKL BOOLEAN NOT NULL DEFAULT FALSE,
+                  kelengkapanPiagam BOOLEAN NULL,
+                  kelengkapanSKTM BOOLEAN NULL,
+                  bayarDaftarUlang BOOLEAN NOT NULL DEFAULT FALSE,
+                  biayaDaftarUlang INT NULL,
+                  ukuranSeragam ENUM('S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'Custom') NOT NULL,
+                  seragamOsis BOOLEAN NOT NULL DEFAULT FALSE,
+                  seragamPramuka BOOLEAN NOT NULL DEFAULT FALSE,
+                  seragamBatik BOOLEAN NOT NULL DEFAULT FALSE,
+                  seragamOlahraga BOOLEAN NOT NULL DEFAULT FALSE
+            )`);
+              console.log('Table `daftar_ulang` berhasil dibuat.');
+            }
 
       // Tambahkan logika untuk membuat trigger generateNomorPendaftaranBeforeInsert jika belum ada
       const [triggerExists] = await connection.query<mysql.RowDataPacket[]>('SELECT TRIGGER_NAME FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = ? AND TRIGGER_NAME = ?', [dbConfig.database, 'generateNomorPendaftaranBeforeInsert']);

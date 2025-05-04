@@ -39,13 +39,22 @@ import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Mock data for searchable dropdown - replace with actual data fetching & search logic
-const mockPendaftar = [
-  { id: 'A-2526/0001', nama: 'Ahmad Fauzi', sekolah: 'MTs N 1 Batang' },
-  { id: 'A-2526/0002', nama: 'Budi Santoso', sekolah: 'SMP N 2 Banyuputih' },
-  { id: 'A-2526/0003', nama: 'Citra Lestari', sekolah: 'MTs Al Hidayah' },
-  { id: 'A-2526/0004', nama: 'Dewi Anggraini', sekolah: 'SMP Islam Terpadu' },
-];
+// // Mock data for searchable dropdown - replace with actual data fetching & search logic
+// const mockPendaftar = [
+//   { id: 'A-2526/0001', nama: 'Ahmad Fauzi', sekolah: 'MTs N 1 Batang' },
+//   { id: 'A-2526/0002', nama: 'Budi Santoso', sekolah: 'SMP N 2 Banyuputih' },
+//   { id: 'A-2526/0003', nama: 'Citra Lestari', sekolah: 'MTs Al Hidayah' },
+//   { id: 'A-2526/0004', nama: 'Dewi Anggraini', sekolah: 'SMP Islam Terpadu' },
+// ];
+
+// Define type for pendaftar data (from API) - Optional
+interface Pendaftar {
+  id: string;
+  nomorPendaftaran: string;
+  nama: string;
+  sekolah: string;
+}
+
 
 // Define options for Biaya Daftar Ulang
 const biayaOptions = [
@@ -88,12 +97,24 @@ export default function InputDaftarUlangPage() {
   const [nextNomorDU, setNextNomorDU] = useState('DU-1'); // TODO: Fetch next number from DB
 
   useEffect(() => {
-    // TODO: Fetch actual pendaftar data
-    const options = mockPendaftar.map(p => ({
-      value: p.id,
-      label: `${p.id} - ${p.nama} (${p.sekolah})`,
-    }));
-    setPendaftarOptions(options);
+    // Fetch actual pendaftar data from API (Optional)
+    const fetchPendaftar = async () => {
+      try {
+        const response = await fetch('/api/pendaftar'); // Replace with your API route
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: Pendaftar[] = await response.json();
+        const options = data.map(p => ({
+          value: p.id,
+          label: `${p.nomorPendaftaran} - ${p.nama} (${p.sekolah})`, //Update
+        }));
+        setPendaftarOptions(options);
+      } catch (error) {
+        console.error('Gagal mengambil data pendaftar:', error);
+      }
+    };
+    fetchPendaftar();
   }, []);
 
 
@@ -147,14 +168,26 @@ export default function InputDaftarUlangPage() {
     console.log('Form Daftar Ulang Submitted:', dataToSubmit);
     // --- TODO: Replace with actual API call ---
     try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/daftar-ulang', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSubmit),
+      });
 
-        toast({
-            title: "Sukses!",
-            description: `Data daftar ulang untuk ${values.pendaftarId} berhasil disimpan.`,
-            variant: "default",
-        });
+      if (!response.ok) {
+        // Handle error responses
+        console.error('Response status:', response.status);
+        console.error('Response body:', await response.json()); // Log the response body
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      toast({
+        title: "Sukses!",
+        description: `Data daftar ulang untuk ${values.pendaftarId} berhasil disimpan.`,
+        variant: "default",
+      });
 
         // Fetch the *next* DU number after successful submission
         const currentNum = parseInt(nextNomorDU.split('-')[1]);
