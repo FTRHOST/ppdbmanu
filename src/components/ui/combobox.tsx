@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -66,7 +65,7 @@ export function Combobox({
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
         <Command
           filter={(itemValue, search) => {
-            const option = options.find(o => o.value.toLowerCase() === itemValue);
+            const option = options.find(o => String(o.value).toLowerCase() === itemValue);
             if (option?.label.toLowerCase().includes(search.toLowerCase())) return 1;
             return 0;
           }}
