@@ -136,14 +136,14 @@ const FormPendaftaranClient = () => {
     const [alamatLengkap, setAlamatLengkap] = useState<string | null>(null);
     const [formData, setFormData] = useState<FormSchemaType>({
         rekomendasiPendaftaran: '',
-        jalurPendaftaran: undefined,
-        programPeminatan: undefined,
+        jalurPendaftaran: undefined as any,
+        programPeminatan: undefined as any,
         nama: '',
-        jenisKelamin: undefined,
+        jenisKelamin: undefined as any,
         tempatLahir: '',
-        tanggalLahir: undefined,
+        tanggalLahir: undefined as any,
         noHp: '',
-        tinggal: undefined,
+        tinggal: undefined as any,
         dukuhJalan: '',
         desa: '',
         rt: '',
@@ -152,15 +152,15 @@ const FormPendaftaranClient = () => {
         kabupaten: '',
         provinsi: '',
         namaAyah: '',
-        pendidikanAyah: undefined,
+        pendidikanAyah: undefined as any,
         pekerjaanAyah: '',
         namaIbu: '',
-        pendidikanIbu: undefined,
+        pendidikanIbu: undefined as any,
         pekerjaanIbu: '',
         alamatOrangtua: '',
         noHpAyah: '',
         noHpIbu: '',
-        punyaSaudaraDiMansaba: undefined,
+        punyaSaudaraDiMansaba: undefined as any,
         namaWali: '',
         hubunganWali: '',
         pendidikanWali: undefined,
@@ -299,7 +299,7 @@ const FormPendaftaranClient = () => {
   
           toast({
               title: "Pendaftaran Berhasil!",
-              description: `Data Anda telah berhasil dikirim. Nomor Pendaftaran Anda: ${result.id}. Silakan lanjutkan ke proses Daftar Ulang.`,
+              description: `Data Anda telah berhasil dikirim. Nomor Pendaftaran Anda: ${result.nomorPendaftaran}. Silakan lanjutkan ke proses Daftar Ulang.`,
               variant: "default",
           });
           form.reset();

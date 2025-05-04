@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '../../../config/enterprise';
-import { formatPendaftaranId } from '../../../utils/formatId'; // Import fungsi
+// import { formatPendaftaranId } from '../../../utils/idFormatter'; // Hapus import ini
 
 // Definisikan interface untuk data pendaftaran (contoh)
 interface PendaftaranData {
@@ -43,6 +43,12 @@ interface PendaftaranData {
     motivasi: string;
     tempatTanggalLahir: string;
     alamatLengkap: string;
+}
+
+// Definisikan interface untuk response API
+interface PendaftaranResponse {
+    message: string;
+    nomorPendaftaran?: string; // Optional karena mungkin ada error
 }
 
 export async function POST(req: NextRequest) {
@@ -111,11 +117,13 @@ export async function POST(req: NextRequest) {
             // Dapatkan ID pendaftaran yang baru diinsert
             const insertId = (result as any).insertId;
 
-            // Format ID pendaftaran
-            const pendaftaranId = formatPendaftaranId(insertId);
+            // Dapatkan nomor pendaftaran dari database
+            const [pendaftar] = await connection.execute<any>('SELECT nomorPendaftaran FROM pendaftaran WHERE id = ?', [insertId]);
 
-            // Kembalikan respons sukses dengan ID yang diformat
-            return NextResponse.json({ message: 'Pendaftaran berhasil', id: pendaftaranId }, { status: 201 });
+            const nomorPendaftaran = pendaftar[0].nomorPendaftaran;
+
+            // Kembalikan respons sukses dengan nomor pendaftaran
+            return NextResponse.json<PendaftaranResponse>({ message: 'Pendaftaran berhasil', nomorPendaftaran: nomorPendaftaran }, { status: 201 });
         } finally {
             // Pastikan untuk melepaskan koneksi setelah digunakan
             connection.release();

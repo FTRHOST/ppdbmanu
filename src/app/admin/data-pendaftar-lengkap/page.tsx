@@ -37,30 +37,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from '@/hooks/use-toast';
 
-// Mock data structure - This should represent the FULL data collected in the form
+// Data structure - This should represent the data from the database
 interface PendaftarLengkap {
-  id: number; // Unique DB ID
+  id: number;
   nomorPendaftaran: string;
   nama: string;
   jenisKelamin: 'Laki-laki' | 'Perempuan';
-  tempatTanggalLahir: string; // Combined field
+  tempatTanggalLahir: string; // Sudah string
   noHp: string;
-  alamatLengkap: string; // Combined field
+  alamatLengkap: string;
   sekolahAsal: string;
   programPeminatan: 'MIPA' | 'IPS' | 'BHS' | 'AGM' | 'Tahfidz';
   jalurPendaftaran: 'Reguler Umum' | 'Reguler Prestasi' | 'Reguler Sosial';
   namaAyah: string;
   namaIbu: string;
-  // Add all other fields from the form schema as needed for display/edit
   statusDaftarUlang: 'Sudah' | 'Belum';
 }
-
-// Mock data - replace with actual data fetching
-const mockData: PendaftarLengkap[] = [
-  { id: 1, nomorPendaftaran: 'A-2526/0001', nama: 'Ahmad Fauzi', jenisKelamin: 'Laki-laki', tempatTanggalLahir: 'Batang, 15-Jan-2009', noHp: '081234567890', alamatLengkap: 'Dukuh Krajan, Banyuputih, RT/RW 01/01, Kec. Banyuputih, Kab. Batang, Prov. Jawa Tengah', sekolahAsal: 'MTs N 1 Batang', programPeminatan: 'MIPA', jalurPendaftaran: 'Reguler Umum', namaAyah: 'Suparjo', namaIbu: 'Siti Aminah', statusDaftarUlang: 'Sudah' },
-  { id: 2, nomorPendaftaran: 'A-2526/0002', nama: 'Budi Santoso', jenisKelamin: 'Laki-laki', tempatTanggalLahir: 'Pekalongan, 20-Feb-2009', noHp: '081234567891', alamatLengkap: 'Jl. Melati No. 5, Pekalongan Utara, RT/RW 03/05, Kec. Pekalongan Utara, Kab. Pekalongan, Prov. Jawa Tengah', sekolahAsal: 'SMP N 2 Banyuputih', programPeminatan: 'IPS', jalurPendaftaran: 'Reguler Sosial', namaAyah: 'Joko Susilo', namaIbu: 'Endang Lestari', statusDaftarUlang: 'Belum' },
-   { id: 3, nomorPendaftaran: 'A-2526/0003', nama: 'Citra Lestari', jenisKelamin: 'Perempuan', tempatTanggalLahir: 'Subah, 10-Mar-2009', noHp: '081234567892', alamatLengkap: 'Dukuh Sawah, Subah, RT/RW 02/03, Kec. Subah, Kab. Batang, Prov. Jawa Tengah', sekolahAsal: 'MTs Al Hidayah', programPeminatan: 'BHS', jalurPendaftaran: 'Reguler Prestasi', namaAyah: 'Agus Setiawan', namaIbu: 'Rina Wati', statusDaftarUlang: 'Sudah' },
-];
 
 export default function DataPendaftarLengkapPage() {
   const [pendaftar, setPendaftar] = useState<PendaftarLengkap[]>([]);
@@ -68,14 +60,26 @@ export default function DataPendaftarLengkapPage() {
   const [loading, setLoading] = useState(true);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
-  // Simulate data fetching
   useEffect(() => {
-    // TODO: Replace with actual API call to fetch full pendaftar data
     const fetchData = async () => {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-      setPendaftar(mockData);
-      setLoading(false);
+      try {
+        const response = await fetch('/api/pendaftar-lengkap'); // Panggil API route
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: PendaftarLengkap[] = await response.json();
+        setPendaftar(data);
+      } catch (error) {
+        console.error('Gagal mengambil data pendaftar:', error);
+        toast({
+          title: "Gagal!",
+          description: "Terjadi kesalahan saat mengambil data dari server.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
@@ -96,7 +100,7 @@ export default function DataPendaftarLengkapPage() {
  const handleDeletePendaftar = async () => {
     if (itemToDelete === null) return;
     console.log('Deleting pendaftar with ID:', itemToDelete);
-    // --- TODO: Replace with actual API call to delete ---
+    // TODO: Replace with actual API call to delete data on the server
     try {
         setLoading(true); // Show loading state during deletion
         await new Promise(resolve => setTimeout(resolve, 700)); // Simulate API delay
@@ -120,9 +124,7 @@ export default function DataPendaftarLengkapPage() {
         setItemToDelete(null); // Close dialog
         setLoading(false); // Hide loading state
     }
-    // --- End of TODO ---
  };
-
 
  const handleExportExcel = () => {
     // TODO: Implement Excel export logic for the full data
@@ -271,4 +273,3 @@ export default function DataPendaftarLengkapPage() {
     </div>
   );
 }
-

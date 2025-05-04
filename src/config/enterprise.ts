@@ -67,13 +67,103 @@ async function checkAndCreateTable() {
           punyaPiagam ENUM('Punya', 'Tidak Punya') NULL,
           motivasi TEXT NULL,
           tanggalDaftar DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
-          tempatTanggalLahir VARCHAR(255) NULL,  -- Tambahkan kolom ini
-          alamatLengkap TEXT NULL               -- Tambahkan kolom ini
+          tempatLahir VARCHAR(255) NULL,
+          tanggalLahir DATE NULL,
+          alamatLengkap TEXT NULL,
+          statusDaftarUlang ENUM('Sudah', 'Belum') NOT NULL DEFAULT 'Belum',
+          nomorPendaftaran VARCHAR(255) NULL
         )
       `);
       console.log('Tabel `pendaftaran` berhasil dibuat.');
+
+       // Buat fungsi generateNomorPendaftaran
+      console.log('Membuat fungsi `generateNomorPendaftaran`...');
+      await connection.execute(`
+          CREATE FUNCTION generateNomorPendaftaran()
+          RETURNS VARCHAR(255)
+          DETERMINISTIC
+          BEGIN
+            DECLARE lastId INT;
+            DECLARE newId INT;
+            DECLARE formattedId VARCHAR(255);
+
+            -- Dapatkan ID terakhir
+            SELECT COALESCE(MAX(CAST(SUBSTRING(nomorPendaftaran, 5) AS UNSIGNED)), 0) INTO lastId FROM pendaftaran;
+
+            -- Hasilkan ID baru
+            SET newId = lastId + 1;
+
+            -- Format ID
+            SET formattedId = CONCAT('MANU', LPAD(newId, 3, '0'));
+
+            RETURN formattedId;
+          END 
+        `);
+      console.log('Fungsi `generateNomorPendaftaran` berhasil dibuat.');
+
+      // Buat trigger generateNomorPendaftaranBeforeInsert
+      console.log('Membuat trigger `generateNomorPendaftaranBeforeInsert`...');
+      await connection.execute(`
+          CREATE TRIGGER generateNomorPendaftaranBeforeInsert
+          BEFORE INSERT ON pendaftaran
+          FOR EACH ROW
+          BEGIN
+            SET NEW.nomorPendaftaran = generateNomorPendaftaran();
+          END 
+        `);
+      console.log('Trigger `generateNomorPendaftaranBeforeInsert` berhasil dibuat.');
     } else {
       console.log('Tabel `pendaftaran` sudah ada.');
+      // Tambahkan logika untuk ALTER TABLE jika kolom statusDaftarUlang belum ada
+      const [columns] = await connection.query<mysql.RowDataPacket[]>('SHOW COLUMNS FROM pendaftaran LIKE "statusDaftarUlang"');
+      if (columns.length === 0) {
+        console.log('Kolom `statusDaftarUlang` tidak ditemukan. Menambahkan kolom...');
+        await connection.execute(`ALTER TABLE pendaftaran ADD COLUMN statusDaftarUlang ENUM('Sudah', 'Belum') NOT NULL DEFAULT 'Belum'`);
+        console.log('Kolom `statusDaftarUlang` berhasil ditambahkan.');
+      }
+
+      // Tambahkan logika untuk membuat fungsi generateNomorPendaftaran jika belum ada
+      const [functionExists] = await connection.query<mysql.RowDataPacket[]>('SELECT ROUTINE_NAME FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = ? AND ROUTINE_NAME = ?', [dbConfig.database, 'generateNomorPendaftaran']);
+      if (functionExists.length === 0) {
+        console.log('Fungsi `generateNomorPendaftaran` tidak ditemukan. Membuat fungsi...');
+        await connection.execute(`
+            CREATE FUNCTION generateNomorPendaftaran()
+            RETURNS VARCHAR(255)
+            DETERMINISTIC
+            BEGIN
+              DECLARE lastId INT;
+              DECLARE newId INT;
+              DECLARE formattedId VARCHAR(255);
+
+              -- Dapatkan ID terakhir
+              SELECT COALESCE(MAX(CAST(SUBSTRING(nomorPendaftaran, 5) AS UNSIGNED)), 0) INTO lastId FROM pendaftaran;
+
+              -- Hasilkan ID baru
+              SET newId = lastId + 1;
+
+              -- Format ID
+              SET formattedId = CONCAT('MANU', LPAD(newId, 3, '0'));
+
+              RETURN formattedId;
+            END 
+          `);
+        console.log('Fungsi `generateNomorPendaftaran` berhasil dibuat.');
+      }
+
+      // Tambahkan logika untuk membuat trigger generateNomorPendaftaranBeforeInsert jika belum ada
+      const [triggerExists] = await connection.query<mysql.RowDataPacket[]>('SELECT TRIGGER_NAME FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = ? AND TRIGGER_NAME = ?', [dbConfig.database, 'generateNomorPendaftaranBeforeInsert']);
+      if (triggerExists.length === 0) {
+        console.log('Trigger `generateNomorPendaftaranBeforeInsert` tidak ditemukan. Membuat trigger...');
+        await connection.execute(`
+            CREATE TRIGGER generateNomorPendaftaranBeforeInsert
+            BEFORE INSERT ON pendaftaran
+            FOR EACH ROW
+            BEGIN
+              SET NEW.nomorPendaftaran = generateNomorPendaftaran();
+            END 
+          `);
+        console.log('Trigger `generateNomorPendaftaranBeforeInsert` berhasil dibuat.');
+      }
     }
 
     // Commit transaction
@@ -102,7 +192,7 @@ async function initializeDatabase() {
   } catch (error) {
     console.error('Gagal menginisialisasi database:', error);
     // Mungkin perlu keluar dari aplikasi atau mencoba lagi
-    process.exit(1); 
+    process.exit(1);
   }
 }
 
