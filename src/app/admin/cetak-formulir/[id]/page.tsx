@@ -1,4 +1,4 @@
-
+// src/app/admin/cetak-formulir/[id]/page.tsx (Diperbarui)
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -17,134 +17,7 @@ interface PendaftarLengkap extends FormulirData {
 }
 
 // Mock data remains the same
-const mockFullData: PendaftarLengkap[] = [
-   {
-     id: 1,
-     nomorPendaftaran: 'A-2526/0001',
-     nisn: '0098765432',
-     nama: 'Ahmad Fauzi',
-     tempatTanggalLahir: 'Batang, 15 Januari 2009',
-     jenisKelamin: 'Laki-laki',
-     alamatLengkap: 'Dukuh Krajan, Banyuputih, RT/RW 01/01, Kec. Banyuputih, Kab. Batang, Prov. Jawa Tengah',
-     desa: 'Banyuputih',
-     kecamatan: 'Banyuputih',
-     kabupaten: 'Batang',
-     provinsi: 'Jawa Tengah',
-     dukuhJalan: 'Dukuh Krajan',
-     rt: '01',
-     rw: '01',
-     noHp: '081234567890',
-     tinggal: 'Bersama Orang tua',
-     jalurPendaftaran: 'Reguler Umum',
-     programPeminatan: 'MIPA',
-     namaAyah: 'Suparjo',
-     pendidikanAyah: 'SMA/SMK',
-     pekerjaanAyah: 'Wiraswasta',
-     noHpAyah: '081111111111',
-     namaIbu: 'Siti Aminah',
-     pendidikanIbu: 'SMP',
-     pekerjaanIbu: 'Ibu Rumah Tangga',
-     noHpIbu: '082222222222',
-     alamatOrangtua: 'Sama dengan siswa',
-     punyaSaudaraDiMansaba: 'Tidak Punya',
-     namaWali: '',
-     hubunganWali: '',
-     pendidikanWali: undefined,
-     pekerjaanWali: '',
-     alamatWali: '',
-     noHpWali: '',
-     namaSekolahAsal: 'MTs N 1 Batang',
-     alamatSekolahAsal: 'Jl. Raya Batang No. 10',
-     rekomendasiPendaftaran: 'Guru MTs',
-     punyaPiagam: 'Tidak Punya',
-     motivasi: 'Ingin mendalami ilmu agama dan umum.',
-     tanggalDaftar: new Date()
-   },
-   {
-     id: 2,
-     nomorPendaftaran: 'A-2526/0002',
-     nisn: '0091234567',
-     nama: 'Budi Santoso',
-     tempatTanggalLahir: 'Pekalongan, 20 Februari 2009',
-     jenisKelamin: 'Laki-laki',
-     alamatLengkap: 'Jl. Melati No. 5, Pekalongan Utara, RT/RW 03/05, Kec. Pekalongan Utara, Kab. Pekalongan, Prov. Jawa Tengah',
-     desa: 'Pekalongan Utara',
-     kecamatan: 'Pekalongan Utara',
-     kabupaten: 'Pekalongan',
-     provinsi: 'Jawa Tengah',
-     dukuhJalan: 'Jl. Melati No. 5',
-     rt: '03',
-     rw: '05',
-     noHp: '081234567891',
-     tinggal: 'Bersama Wali',
-     jalurPendaftaran: 'Reguler Sosial',
-     programPeminatan: 'IPS',
-     namaAyah: 'Joko Susilo',
-     pendidikanAyah: 'S1',
-     pekerjaanAyah: 'PNS',
-     noHpAyah: '083333333333',
-     namaIbu: 'Endang Lestari',
-     pendidikanIbu: 'SMA/SMK',
-     pekerjaanIbu: 'Karyawan Swasta',
-     noHpIbu: '084444444444',
-     alamatOrangtua: 'Sama dengan wali',
-     punyaSaudaraDiMansaba: 'Punya',
-     namaWali: 'Sugeng Raharjo',
-     hubunganWali: 'Paman',
-     pendidikanWali: 'D3',
-     pekerjaanWali: 'Pedagang',
-     alamatWali: 'Jl. Melati No. 5, Pekalongan Utara, RT/RW 03/05, Kec. Pekalongan Utara, Kab. Pekalongan, Prov. Jawa Tengah',
-     noHpWali: '085555555555',
-     namaSekolahAsal: 'SMP N 2 Banyuputih',
-     alamatSekolahAsal: 'Jl. Pendidikan No. 1',
-     rekomendasiPendaftaran: 'Saudara',
-     punyaPiagam: 'Punya',
-     motivasi: 'Tertarik dengan program IPS.',
-     tanggalDaftar: new Date()
-   },
-    {
-     id: 4,
-     nomorPendaftaran: 'A-2526/0004',
-     nisn: '0098887776',
-     nama: 'Dewi Anggraini',
-     tempatTanggalLahir: 'Batang, 19 Mei 2010',
-     jenisKelamin: 'Perempuan',
-     alamatLengkap: 'Kebumen Rt. 010/003 Kec. Tersono Kab. Batang',
-     desa: 'Kebumen',
-     kecamatan: 'Tersono',
-     kabupaten: 'Batang',
-     provinsi: 'Jawa Tengah',
-     dukuhJalan: 'Karangjati',
-     rt: '10',
-     rw: '03',
-     noHp: '081567987147',
-     tinggal: 'Bersama Orang tua',
-     jalurPendaftaran: 'Reguler Sosial',
-     programPeminatan: 'IPS',
-     namaAyah: 'Muji Teguh',
-     pendidikanAyah: 'SD',
-     pekerjaanAyah: 'PETANI',
-     noHpAyah: '081567987147',
-     namaIbu: 'Ngatirah',
-     pendidikanIbu: 'SD',
-     pekerjaanIbu: 'IRT',
-     noHpIbu: '081567987147',
-     alamatOrangtua: 'KARANGJATI, KEBUMEN, TERSONO, BATANG',
-     punyaSaudaraDiMansaba: 'Tidak Punya',
-     namaWali: 'MUJI TEGUH',
-     hubunganWali: 'AYAH',
-     pendidikanWali: 'SD',
-     pekerjaanWali: 'PETANI',
-     alamatWali: 'KARANGJATI, KEBUMEN, TERSONO, BATANG',
-     noHpWali: '081567987147',
-     namaSekolahAsal: 'MTS NURUSSALAM TERSONO',
-     alamatSekolahAsal: 'TERSONO',
-     rekomendasiPendaftaran: 'Ahmad Mashfufi',
-     punyaPiagam: 'Punya',
-     motivasi: 'TOLABUL ILMI',
-     tanggalDaftar: new Date('2025-04-26')
-   },
- ];
+// const mockFullData: PendaftarLengkap[] = [ ... ]; // Hapus mock data
 
 // Component to render the actual page content once auth is confirmed
 const CetakFormulirPageContent = () => {
@@ -175,12 +48,17 @@ const CetakFormulirPageContent = () => {
             setError(null);
             try {
                 console.log(`Fetching data for ID: ${pendaftarId}`);
-                await new Promise(resolve => setTimeout(resolve, 500));
-                const foundData = mockFullData.find(item => item.id === pendaftarId);
+                const response = await fetch(`/api/pendaftar/${pendaftarId}`); // Panggil API route
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const apiData: FormulirData = await response.json(); // Ambil data dari respons API
+                // await new Promise(resolve => setTimeout(resolve, 500));
+                // const foundData = mockFullData.find(item => item.id === pendaftarId);
 
-                if (foundData) {
+                if (apiData) {
                     const dataWithPrintDate: FormulirData = {
-                        ...foundData,
+                        ...apiData,
                         tanggalCetak: format(new Date(), 'dd MMMM yyyy', { locale: localeId })
                     };
                     setData(dataWithPrintDate);
@@ -432,4 +310,3 @@ const CetakFormulirPage = () => {
 
 
 export default CetakFormulirPage;
-

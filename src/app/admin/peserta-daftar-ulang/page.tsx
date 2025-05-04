@@ -1,7 +1,7 @@
+// src/app/admin/peserta-daftar-ulang/page.tsx (Diperbarui)
 'use client';
 
-import type React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'; // Import useRouter
 import {
   Table,
@@ -21,6 +21,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
@@ -41,13 +42,8 @@ export interface PesertaDaftarUlang { // Export interface
   ukuranSeragam: string;
 }
 
-// Mock data - replace with actual data fetching (filter pendaftar based on statusDaftarUlang='Sudah') - Export data
-export const mockPesertaDaftarUlangData: PesertaDaftarUlang[] = [
-  { id: 101, pendaftarId: 1, nomorPendaftaran: 'A-2526/0001', nomorDaftarUlang: 'DU-1', nama: 'Ahmad Fauzi', sekolahAsal: 'MTs N 1 Batang', tanggalDaftarUlang: '2024-07-15', ukuranSeragam: 'L' },
-  { id: 102, pendaftarId: 3, nomorPendaftaran: 'A-2526/0003', nomorDaftarUlang: 'DU-2', nama: 'Citra Lestari', sekolahAsal: 'MTs Al Hidayah', tanggalDaftarUlang: '2024-07-15', ukuranSeragam: 'M' },
-  { id: 103, pendaftarId: 6, nomorPendaftaran: 'A-2526/0006', nomorDaftarUlang: 'DU-3', nama: 'Fitri Handayani', sekolahAsal: 'SMP N 1 Subah', tanggalDaftarUlang: format(new Date(), 'yyyy-MM-dd'), ukuranSeragam: 'XL' }, // Today
-  // Add more mock data if needed for dashboard testing
-];
+// Mock data - replace with actual data fetching (filter pendaftar based on statusDaftarUlang='Sudah') - Remove mock data
+// export const mockPesertaDaftarUlangData: PesertaDaftarUlang[] = [ ... ];
 
 export default function PesertaDaftarUlangPage() {
   const [peserta, setPeserta] = useState<PesertaDaftarUlang[]>([]);
@@ -55,14 +51,27 @@ export default function PesertaDaftarUlangPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter(); // Initialize useRouter
 
-  // Simulate data fetching
+  // Use effect to fetch data from the API
   useEffect(() => {
-    // TODO: Replace with actual API call to fetch peserta daftar ulang data
     const fetchData = async () => {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-      setPeserta(mockPesertaDaftarUlangData); // Use exported data
-      setLoading(false);
+      try {
+        const response = await fetch('/api/peserta-daftar-ulang?status=Sudah'); // Call API route
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: PesertaDaftarUlang[] = await response.json();
+        setPeserta(data);
+      } catch (error) {
+        console.error('Gagal mengambil data peserta daftar ulang:', error);
+        toast({
+          title: "Gagal Memuat Data",
+          description: "Terjadi kesalahan saat mengambil data peserta daftar ulang.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
