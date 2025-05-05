@@ -1,3 +1,4 @@
+// src/app/form-daftar-ulang/page.tsx
 'use client';
 
 import type React from 'react';
@@ -21,8 +22,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'; // Import Select components
-import { Combobox } from '@/components/ui/combobox'; // Import Combobox
+} from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -30,21 +31,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Import RadioGroup and RadioGroupItem
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Mock data for searchable dropdown - replace with actual data fetching & search logic
-const mockPendaftar = [
-  { id: 'A-2526/0001', nama: 'Ahmad Fauzi', sekolah: 'MTs N 1 Batang' },
-  { id: 'A-2526/0002', nama: 'Budi Santoso', sekolah: 'SMP N 2 Banyuputih' },
-  { id: 'A-2526/0003', nama: 'Citra Lestari', sekolah: 'MTs Al Hidayah' },
-  { id: 'A-2526/0004', nama: 'Dewi Anggraini', sekolah: 'SMP Islam Terpadu' },
-];
+import { Pendaftar } from '@/types/pendaftarTypes';
 
 // Define options for Biaya Daftar Ulang
 const biayaOptions = [
@@ -56,68 +51,35 @@ const biayaOptions = [
   // Add other specific amounts if needed
 ];
 
+// Define interface for Next Nomor DU
+interface NextDUResponse {
+    nextNomorDU: string;
+}
+
 const daftarUlangSchema = z.object({
   pendaftarId: z.string({ required_error: 'Siswa pendaftar harus dipilih.' }).min(1, 'Siswa pendaftar harus dipilih.'),
   nomorDaftarUlang: z.string(), // Readonly, generated automatically
   kelengkapanKK: z.boolean().default(false),
   kelengkapanSKL: z.boolean().default(false),
-  kelengkapanPiagam: z.boolean().optional(), // Optional based on form pendaftaran
-  kelengkapanSKTM: z.boolean().optional(), // Optional
+  kelengkapanPiagam: z.boolean().optional().nullable(), // allow isOptional.
+  kelengkapanSKTM: z.boolean().optional().nullable(), // allow isOptional.
   bayarDaftarUlang: z.boolean().default(false),
-  biayaDaftarUlang: z.number().optional(), // Keep as number, handle conversion in Select
+  biayaDaftarUlang: z.number().optional().nullable(), // use the  Number(numString) or similar convert
   ukuranSeragam: z.enum(['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'Custom'], { required_error: 'Ukuran seragam harus dipilih.' }),
   seragamOsis: z.boolean().default(false),
   seragamPramuka: z.boolean().default(false),
   seragamBatik: z.boolean().default(false),
   seragamOlahraga: z.boolean().default(false),
   tanggalDaftarUlang: z.date(), // Readonly, set to today
-}).refine(data => {
-  // If payment is checked, a valid amount must be selected (i.e., not undefined and > 0)
-  if (data.bayarDaftarUlang && (data.biayaDaftarUlang === undefined || data.biayaDaftarUlang <= 0)) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'Jumlah biaya daftar ulang harus dipilih jika pembayaran dicentang.',
-  path: ['biayaDaftarUlang'],
 });
+// Use type
+type DaftarUlangFormValues = z.infer<typeof daftarUlangSchema>;
 
 export default function InputDaftarUlangPage() {
   const [pendaftarOptions, setPendaftarOptions] = useState<{ value: string; label: string }[]>([]);
-  const [nextNomorDU, setNextNomorDU] = useState('DU-1'); // TODO: Fetch next number from DB
+  const [nextNomorDU, setNextNomorDU] = useState('DU-1');
 
-  useEffect(() => {
-    const fetchPendaftar = async () => {
-      try {
-        const response = await fetch('/api/pendaftar'); // Fetch from your API
-        if (!response.ok) {
-          throw new Error('Failed to fetch pendaftar data');
-        }
-        const data = await response.json();
-        const options = data.map((item: any) => ({
-          value: item.id,
-          label: `${item.nomorPendaftaran} - ${item.nama} (${item.sekolah})`, // Adjust based on your API response
-        }));
-        setPendaftarOptions(options);
-      } catch (error) {
-        console.error('Error fetching pendaftar:', error);
-      }
-    };
-
-    fetchPendaftar();
-  }, []);
-
-  useEffect(() => {
-    // TODO: Fetch actual next DU number
-    const fetchNextNumber = async () => {
-        await new Promise(resolve => setTimeout(resolve, 50)); // Simulate delay
-        const lastNumber = 3; // Assume last number is 3 from DB
-        setNextNomorDU(`DU-${lastNumber + 1}`);
-    };
-    fetchNextNumber();
-  }, []);
-
-  const form = useForm<z.infer<typeof daftarUlangSchema>>({
+  const form = useForm<DaftarUlangFormValues>({
     resolver: zodResolver(daftarUlangSchema),
     defaultValues: {
       pendaftarId: '', // Initialize as empty string for Combobox
@@ -137,10 +99,71 @@ export default function InputDaftarUlangPage() {
     },
   });
 
-   // Update nomorDaftarUlang in form when nextNomorDU changes
+   // 1.New Function with useCallback
+  const fetchNextNomorDU = useCallback(async () => {
+      try {
+         const response = await fetch('/api/next-nomor-du'); // Call new Route
+
+      if (!response.ok) {
+         console.error('Response status for fetchNextNumber:', response.status); // New Errors
+      console.error('Response body:', await response.text()); // Trace message text
+                throw new Error(`HTTP error! status: ${response.status}`); // Correct code
+            }
+         const data:NextDUResponse = await response.json()   // New Assertion type
+            setNextNomorDU(data.nextNomorDU); // Check properties valid with try
+
+        } catch (error) {
+            console.error('Error fetching next DU number:', error);
+              toast({
+                    title: "Gagal Memuat Data",
+                    description: "Terjadi kesalahan saat memuat nomor daftar ulang otomatis.",
+                    variant: "destructive",
+                });
+        }
+    }, []);
+
+  // Call Fetch as page mount and reuse a local call with callback when any call needed
+  useEffect(() => {
+    fetchNextNomorDU();  // Call with Callback Func in first run
+  }, [fetchNextNomorDU]);
+
+
+  useEffect(() => {
+    const fetchPendaftar = async () => {
+      try {
+        const response = await fetch('/api/pendaftar'); // Fetch from your API
+        if (!response.ok) {
+          console.error('Failed to fetch pendaftar data'); // add info for logs
+          throw new Error(`HTTP error! status: ${response.status}`);// better err
+          
+        }
+        const data: Pendaftar[] = await response.json();   // Apply types in variable for safe use
+
+        const options = data.map((item) => ({
+          value: item.id,
+          label: `${item.nomorPendaftaran} - ${item.nama} (${item.namaSekolahAsal})`, // Use same and exist Type value
+        }));
+        setPendaftarOptions(options);
+      } catch (error) {
+        console.error('Error fetching pendaftar:', error);
+        toast({
+                    title: "Gagal Memuat Data",
+                    description: "Terjadi kesalahan saat cargar la lista de postulantes.",
+                    variant: "destructive",
+                });
+      }
+    };
+    fetchPendaftar();
+  }, []);  // No Dependecy
+
+
+   // Call in init after fetch Next NUm
+
+   // Update value form  with new DU number
    useEffect(() => {
-       form.setValue('nomorDaftarUlang', nextNomorDU);
-   }, [nextNomorDU, form]);
+    form.setValue('nomorDaftarUlang', nextNomorDU); //Call set force change value
+  }, [nextNomorDU, form]); // Add dependencies
+
 
   // Watch bayarDaftarUlang to toggle biaya field visibility/requirement
   const watchBayarDaftarUlang = form.watch('bayarDaftarUlang');
@@ -152,62 +175,62 @@ export default function InputDaftarUlangPage() {
       biayaDaftarUlang: values.bayarDaftarUlang ? values.biayaDaftarUlang : null, // Set null if not paid
       tanggalDaftarUlang: format(values.tanggalDaftarUlang, 'yyyy-MM-dd'), // Format date for DB
     };
-    console.log('Form Daftar Ulang Submitted:', dataToSubmit);
-    // --- TODO: Replace with actual API call ---
-    try {
-        // Simulate API call
+     console.log('Form Daftar Ulang Submitted:', dataToSubmit); // Trace Values Sended
+
+    // Call Api POST
+
+     try {
         const response = await fetch('/api/daftar-ulang', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(dataToSubmit),
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSubmit),
         });
-  
-        if (!response.ok) {
-          // Handle error responses
-          console.error('Response status:', response.status);
-          console.error('Response body:', await response.json()); // Log the response body
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+
+             if (!response.ok) {
+                  console.error('Response status:', response.status);
+                 console.error('Response body:', await response.json());
+                 throw new Error(`HTTP error! status: ${response.status}`);
+               }
 
         toast({
             title: "Sukses!",
             description: `Data daftar ulang untuk ${values.pendaftarId} berhasil disimpan.`,
             variant: "default",
         });
+ // New Try and call Fetch in correct time, and force by API not call direct value SetNum
+  fetchNextNomorDU();
 
-        // Fetch the *next* DU number after successful submission
-        const currentNum = parseInt(nextNomorDU.split('-')[1]);
-        const newNextNum = `DU-${currentNum + 1}`;
-        setNextNomorDU(newNextNum); // Update state for the next form load
-        form.reset({ // Reset form with the new DU number and today's date
-            ...form.getValues(), // Keep other potential defaults if needed
-            pendaftarId: '', // Clear selection
-            nomorDaftarUlang: newNextNum,
-            kelengkapanKK: false,
-            kelengkapanSKL: false,
-            kelengkapanPiagam: false,
-            kelengkapanSKTM: false,
-            bayarDaftarUlang: false,
-            biayaDaftarUlang: undefined, // Reset biaya
-            ukuranSeragam: undefined,
-            seragamOsis: false,
-            seragamPramuka: false,
-            seragamBatik: false,
-            seragamOlahraga: false,
-            tanggalDaftarUlang: new Date(),
-        });
+         form.reset({
+                    ...form.getValues(), // Keep other potential defaults if needed
+                    pendaftarId: '', // Clear selection
+                    nomorDaftarUlang:nextNomorDU, //Force value num load from the variable API num in the correct time
+  kelengkapanKK: false,
+                    kelengkapanSKL: false,
+                    kelengkapanPiagam: false,
+                    kelengkapanSKTM: false,
+                    bayarDaftarUlang: false,
+                    biayaDaftarUlang: undefined, // Reset biaya
+                    ukuranSeragam: undefined,
+                    seragamOsis: false,
+                    seragamPramuka: false,
+                    seragamBatik: false,
+                    seragamOlahraga: false,
+                    tanggalDaftarUlang: new Date(),
+                });
+
     } catch (error) {
+
+   console.error("Submission error:", error);  // Show Submission Error With Call
         toast({
             title: "Gagal!",
             description: "Terjadi kesalahan saat menyimpan data daftar ulang.",
             variant: "destructive",
         });
     }
-    // --- End of TODO ---
+    // ---- of Call
   }
-
 
   return (
     <div className="space-y-6">
@@ -269,7 +292,6 @@ export default function InputDaftarUlangPage() {
                     )}
                  />
               </div>
-
 
               {/* Kelengkapan Berkas */}
               <FormItem>
@@ -472,7 +494,6 @@ export default function InputDaftarUlangPage() {
                    </div>
                  </FormItem>
                </div>
-
 
               <Button type="submit" className="w-full md:w-auto bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
                  {form.formState.isSubmitting ? 'Menyimpan...' : 'Simpan Data Daftar Ulang'}

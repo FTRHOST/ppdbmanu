@@ -8,7 +8,7 @@ export async function GET() {
     const connection = await db.getConnection();
     try {
       const [rows] = await connection.query<mysql.RowDataPacket[]>(
-        'SELECT id, nomorPendaftaran, nama, namaSekolahAsal AS sekolah FROM pendaftaran' // Sesuaikan query
+        'SELECT id, nomorPendaftaran, nama, namaSekolahAsal FROM pendaftaran' // Sesuaikan query
       );
       return NextResponse.json(rows);
     } finally {
