@@ -375,7 +375,7 @@ const CetakBuktiDUPageContent = () => {
     return (
       <div className="p-4 print:p-0 min-h-screen flex flex-col bg-gray-100 print:bg-white">
          <div className="mb-4 flex justify-between items-center no-print max-w-6xl mx-auto w-full">
-             <Button variant="outline" size="sm" onClick={() => router.back()}>
+             <Button variant="outline" size="sm" onClick={() => router.push('/admin/peserta-daftar-ulang')}>
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
              </Button>
              <Button onClick={handlePrint} size="sm" >
