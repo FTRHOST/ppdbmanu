@@ -1,3 +1,4 @@
+// src/app/admin/laporan-harian/page.tsx (Diperbarui)
 'use client';
 
 import type React from 'react';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale'; // Import Indonesian locale
-import { Users, UserCheck, TrendingUp, School, BarChart3 } from 'lucide-react';
+import { Users, UserCheck, TrendingUp, School, BarChart3, CheckCircle } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -16,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 // Mock data structure for daily report
 interface DailyReportData {
@@ -35,29 +37,8 @@ interface DailyReportData {
   };
 }
 
-// Mock data - replace with actual data fetching for the selected date
-const getMockReport = (date: Date): DailyReportData => {
-   // Simple deterministic mock based on day of month
-   const day = date.getDate();
-   const basePendaftar = 5 + (day % 10);
-   const baseDU = Math.floor(basePendaftar * (0.5 + (day % 5) * 0.1));
-   return {
-    tanggal: format(date, 'yyyy-MM-dd'),
-    jumlahPendaftar: basePendaftar,
-    jumlahDaftarUlang: baseDU,
-    peminatan: {
-      MIPA: Math.floor(basePendaftar * 0.3),
-      IPS: Math.floor(basePendaftar * 0.25),
-      BHS: Math.floor(basePendaftar * 0.15),
-      AGM: Math.floor(basePendaftar * 0.2),
-      Tahfidz: basePendaftar - Math.floor(basePendaftar * 0.3) - Math.floor(basePendaftar * 0.25) - Math.floor(basePendaftar * 0.15) - Math.floor(basePendaftar * 0.2), // Remainder
-    },
-    jenisKelamin: {
-      LakiLaki: Math.ceil(basePendaftar * 0.55),
-      Perempuan: basePendaftar - Math.ceil(basePendaftar * 0.55),
-    },
-  };
-};
+// Mock data - Remove mock data
+// const getMockReport = (date: Date): DailyReportData => { ... };
 
 const peminatanChartData = (data: DailyReportData['peminatan']) => [
   { name: 'MIPA', Jumlah: data.MIPA },
@@ -72,20 +53,34 @@ const jkChartData = (data: DailyReportData['jenisKelamin']) => [
   { name: 'Perempuan', Jumlah: data.Perempuan },
 ];
 
-
 export default function LaporanHarianPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [reportData, setReportData] = useState<DailyReportData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Replace with actual API call to fetch report data for selectedDate
+    //  Replace with actual API call to fetch report data for selectedDate
     const fetchData = async () => {
       setLoading(true);
-      console.log(`Fetching report for ${format(selectedDate, 'yyyy-MM-dd')}`);
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate delay
-      setReportData(getMockReport(selectedDate));
-      setLoading(false);
+      try {
+        const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+        console.log(`Fetching report for ${formattedDate}`);
+        const response = await fetch(`/api/laporan-harian?tanggal=${formattedDate}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: DailyReportData = await response.json();
+        setReportData(data);
+      } catch (error) {
+        console.error('Gagal mengambil data laporan harian:', error);
+        toast({
+          title: "Gagal Memuat Laporan",
+          description: "Terjadi kesalahan saat mengambil data laporan harian.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, [selectedDate]);
@@ -167,7 +162,7 @@ export default function LaporanHarianPage() {
                          <Card className="bg-secondary/30">
                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                              <CardTitle className="text-sm font-medium">Laki-laki</CardTitle>
-                             <TrendingUp className="h-4 w-4 text-muted-foreground" /> {/* Placeholder Icon */}
+                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                            </CardHeader>
                            <CardContent>
                              <div className="text-2xl font-bold">{reportData.jenisKelamin.LakiLaki}</div>
@@ -176,7 +171,7 @@ export default function LaporanHarianPage() {
                          <Card className="bg-secondary/30">
                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                              <CardTitle className="text-sm font-medium">Perempuan</CardTitle>
-                              <TrendingUp className="h-4 w-4 text-muted-foreground" /> {/* Placeholder Icon */}
+                              <TrendingUp className="h-4 w-4 text-muted-foreground" />
                            </CardHeader>
                            <CardContent>
                              <div className="text-2xl font-bold">{reportData.jenisKelamin.Perempuan}</div>

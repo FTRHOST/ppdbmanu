@@ -41,7 +41,6 @@ interface PendaftaranData {
     nisn: string | null;
     punyaPiagam: 'Punya' | 'Tidak Punya';
     motivasi: string;
-    tempatTanggalLahir: string;
     alamatLengkap: string;
 }
 
@@ -103,7 +102,6 @@ export async function POST(req: NextRequest) {
             nisn,
             punyaPiagam,
             motivasi,
-            tempatTanggalLahir,
             alamatLengkap,
         } = body;
 
@@ -112,7 +110,7 @@ export async function POST(req: NextRequest) {
 
         try {
             // Jalankan query untuk menyimpan data
-            const [result] = await connection.execute('INSERT INTO pendaftaran (rekomendasiPendaftaran, jalurPendaftaran, programPeminatan, nama, jenisKelamin, tempatLahir, tanggalLahir, noHp, tinggal, dukuhJalan, desa, rt, rw, kecamatan, kabupaten, provinsi, namaAyah, pendidikanAyah, pekerjaanAyah, namaIbu, pendidikanIbu, pekerjaanIbu, alamatOrangtua, noHpAyah, noHpIbu, punyaSaudaraDiMansaba, namaWali, hubunganWali, pendidikanWali, pekerjaanWali, alamatWali, noHpWali, namaSekolahAsal, alamatSekolahAsal, nisn, punyaPiagam, motivasi, tempatTanggalLahir, alamatLengkap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [rekomendasiPendaftaran, jalurPendaftaran, programPeminatan, nama, jenisKelamin, tempatLahir, tanggalLahir, noHp, tinggal, dukuhJalan, desa, rt, rw, kecamatan, kabupaten, provinsi, namaAyah, pendidikanAyah, pekerjaanAyah, namaIbu, pendidikanIbu, pekerjaanIbu, alamatOrangtua, noHpAyah, noHpIbu, punyaSaudaraDiMansaba, namaWali, hubunganWali, pendidikanWali, pekerjaanWali, alamatWali, noHpWali, namaSekolahAsal, alamatSekolahAsal, nisn, punyaPiagam, motivasi, tempatTanggalLahir, alamatLengkap]);
+            const [result] = await connection.execute('INSERT INTO pendaftaran (rekomendasiPendaftaran, jalurPendaftaran, programPeminatan, nama, jenisKelamin, tempatLahir, tanggalLahir, noHp, tinggal, dukuhJalan, desa, rt, rw, kecamatan, kabupaten, provinsi, namaAyah, pendidikanAyah, pekerjaanAyah, namaIbu, pendidikanIbu, pekerjaanIbu, alamatOrangtua, noHpAyah, noHpIbu, punyaSaudaraDiMansaba, namaWali, hubunganWali, pendidikanWali, pekerjaanWali, alamatWali, noHpWali, namaSekolahAsal, alamatSekolahAsal, nisn, punyaPiagam, motivasi, alamatLengkap) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [rekomendasiPendaftaran, jalurPendaftaran, programPeminatan, nama, jenisKelamin, tempatLahir, tanggalLahir, noHp, tinggal, dukuhJalan, desa, rt, rw, kecamatan, kabupaten, provinsi, namaAyah, pendidikanAyah, pekerjaanAyah, namaIbu, pendidikanIbu, pekerjaanIbu, alamatOrangtua, noHpAyah, noHpIbu, punyaSaudaraDiMansaba, namaWali, hubunganWali, pendidikanWali, pekerjaanWali, alamatWali, noHpWali, namaSekolahAsal, alamatSekolahAsal, nisn, punyaPiagam, motivasi, alamatLengkap]);
 
             // Dapatkan ID pendaftaran yang baru diinsert
             const insertId = (result as any).insertId;

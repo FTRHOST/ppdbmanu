@@ -1,6 +1,7 @@
+// src/app/admin/cetak-bukti-du/[id]/page.tsx (Diperbarui)
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, type ComponentProps } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import { BuktiDaftarUlangPrint, type BuktiDaftarUlangData } from '@/components/cetak/bukti-daftar-ulang-print';
 import { Button } from '@/components/ui/button';
@@ -11,22 +12,20 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
-// Mock data structure
-interface CombinedData {
-  pendaftarId: number;
+// Mock data structure - Update types for API
+interface ApiCombinedData {
   nomorPendaftaran: string;
   nama: string;
   alamatLengkap: string;
   sekolahAsal: string;
   kabupaten: string;
-  daftarUlangId: number;
   nomorDaftarUlang: string;
   kelengkapanKK: boolean;
   kelengkapanSKL: boolean;
   kelengkapanPiagam: boolean;
   kelengkapanSKTM: boolean;
   bayarDaftarUlang: boolean;
-  biayaDaftarUlang?: number | null;
+  biayaDaftarUlang: number | null;
   tanggalDaftarUlang: string;
   jenisKelamin: 'Laki-laki' | 'Perempuan';
   ukuranSeragam: string;
@@ -36,20 +35,23 @@ interface CombinedData {
   seragamOlahraga: boolean;
 }
 
-const mockCombinedData: CombinedData[] = [
-   {
-     pendaftarId: 1, nomorPendaftaran: 'A-2526/0001', nama: 'Ahmad Fauzi', alamatLengkap: 'Dukuh Krajan, Banyuputih, RT/RW 01/01, Kec. Banyuputih, Kab. Batang, Prov. Jawa Tengah', sekolahAsal: 'MTs N 1 Batang', kabupaten: 'Batang',
-     daftarUlangId: 101, nomorDaftarUlang: 'DU-1', kelengkapanKK: true, kelengkapanSKL: true, kelengkapanPiagam: false, kelengkapanSKTM: false, bayarDaftarUlang: true, biayaDaftarUlang: 400000, tanggalDaftarUlang: '2024-07-15', jenisKelamin: 'Laki-laki', ukuranSeragam: 'L', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: false
-   },
-   {
-     pendaftarId: 3, nomorPendaftaran: 'A-2526/0003', nama: 'Citra Lestari', alamatLengkap: 'Dukuh Sawah, Subah, RT/RW 02/03, Kec. Subah, Kab. Batang, Prov. Jawa Tengah', sekolahAsal: 'MTs Al Hidayah', kabupaten: 'Batang',
-     daftarUlangId: 102, nomorDaftarUlang: 'DU-2', kelengkapanKK: true, kelengkapanSKL: false, kelengkapanPiagam: true, kelengkapanSKTM: true, bayarDaftarUlang: true, biayaDaftarUlang: 300000, tanggalDaftarUlang: '2024-07-15', jenisKelamin: 'Perempuan', ukuranSeragam: 'M', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: true
-   },
-   {
-     pendaftarId: 6, nomorPendaftaran: 'A-2526/0006', nama: 'Fitri Handayani', alamatLengkap: 'Jl. Mawar No. 1, Subah, Batang', sekolahAsal: 'SMP N 1 Subah', kabupaten: 'Batang',
-     daftarUlangId: 103, nomorDaftarUlang: 'DU-3', kelengkapanKK: false, kelengkapanSKL: true, kelengkapanPiagam: false, kelengkapanSKTM: false, bayarDaftarUlang: false, biayaDaftarUlang: null, tanggalDaftarUlang: '2024-07-16', jenisKelamin: 'Perempuan', ukuranSeragam: 'XL', seragamOsis: true, seragamPramuka: false, seragamBatik: true, seragamOlahraga: true
-   },
- ];
+// Update BuktiDaftarUlangData to match API response - new interface
+interface BuktiDaftarUlangDataApi {
+    nomorPendaftaran: string;
+    namaPendaftar: string;
+    asalSekolah: string;
+    alamat: string;
+    nomorDaftarUlang: string;
+    kelengkapanKK: boolean;
+    kelengkapanSKL: boolean;
+    kelengkapanPiagam: boolean;
+    kelengkapanSKTM: boolean;
+    bayarDaftarUlang: boolean;
+    biayaDaftarUlang: number | null;
+    tanggalDaftarUlang: string;
+    kabupatenTempat: string;
+    namaPetugas: string;
+}
 
 // Component to render the actual page content once auth is confirmed
 const CetakBuktiDUPageContent = () => {
@@ -57,7 +59,7 @@ const CetakBuktiDUPageContent = () => {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const daftarUlangId = params?.id ? parseInt(params.id as string, 10) : null;
-    const [data, setData] = useState<BuktiDaftarUlangData | null>(null);
+    const [data, setData] = useState<BuktiDaftarUlangDataApi | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
@@ -88,30 +90,39 @@ const CetakBuktiDUPageContent = () => {
         setError(null);
         try {
           console.log(`Fetching data for Daftar Ulang ID: ${daftarUlangId}`);
-          await new Promise(resolve => setTimeout(resolve, 500));
-          const foundData = mockCombinedData.find(item => item.daftarUlangId === daftarUlangId);
+          const response = await fetch(`/api/bukti-daftar-ulang/${daftarUlangId}`); //Call new API
 
-          if (foundData) {
-             const mappedData: BuktiDaftarUlangData = {
-                 nomorPendaftaran: foundData.nomorPendaftaran,
-                 namaPendaftar: foundData.nama,
-                 asalSekolah: foundData.sekolahAsal,
-                 alamat: foundData.alamatLengkap,
-                 nomorDaftarUlang: foundData.nomorDaftarUlang,
-                 kelengkapanKK: foundData.kelengkapanKK,
-                 kelengkapanSKL: foundData.kelengkapanSKL,
-                 kelengkapanPiagam: foundData.kelengkapanPiagam,
-                 kelengkapanSKTM: foundData.kelengkapanSKTM,
-                 bayarDaftarUlang: foundData.bayarDaftarUlang,
-                 biayaDaftarUlang: foundData.biayaDaftarUlang,
-                 tanggalDaftarUlang: foundData.tanggalDaftarUlang,
-                 kabupatenTempat: foundData.kabupaten,
-                 namaPetugas: user?.name || 'Panitia PPDB',
-             };
-            setData(mappedData);
-          } else {
-            setError(`Data daftar ulang dengan ID ${daftarUlangId} tidak ditemukan.`);
+          if (!response.ok) {
+               console.error(`HTTP error! status: ${response.status}`);
+               toast({
+                  title: "Gagal Memuat Data",
+                  description: `Terjadi kesalahan saat memuat data. Status: ${response.status}`,
+                  variant: "destructive",
+               });
+               return; // Exit early for error handle
           }
+
+          const apiData: ApiCombinedData = await response.json();
+
+          const mappedData: BuktiDaftarUlangDataApi = { // Map data
+               nomorPendaftaran: apiData.nomorPendaftaran,
+              namaPendaftar: apiData.nama,
+                asalSekolah: apiData.sekolahAsal,
+               alamat: apiData.alamatLengkap,
+               nomorDaftarUlang: apiData.nomorDaftarUlang,
+               kelengkapanKK: apiData.kelengkapanKK,
+               kelengkapanSKL: apiData.kelengkapanSKL,
+               kelengkapanPiagam: apiData.kelengkapanPiagam,
+               kelengkapanSKTM: apiData.kelengkapanSKTM,
+                bayarDaftarUlang: apiData.bayarDaftarUlang,
+                biayaDaftarUlang: apiData.biayaDaftarUlang || null,
+               tanggalDaftarUlang: apiData.tanggalDaftarUlang,
+               kabupatenTempat: apiData.kabupaten,
+                namaPetugas: user?.name || 'Panitia PPDB',
+
+           };
+            setData(mappedData); // Assing type data
+
         } catch (err) {
           console.error('Error fetching daftar ulang data:', err);
           setError('Gagal memuat data daftar ulang.');
@@ -132,7 +143,6 @@ const CetakBuktiDUPageContent = () => {
            setLoading(false);
        }
 
-
     }, [daftarUlangId, user, authLoading, isClient, router]);
 
    const handlePrint = () => {
@@ -150,7 +160,7 @@ const CetakBuktiDUPageContent = () => {
 
          if (!printWindow) {
            console.error('Failed to open print window. Pop-up might be blocked.');
-           toast({ title: "Gagal Membuka Jendela Cetak", description: "Browser Anda mungkin memblokir pop-up.", variant: "destructive" });
+           toast({ title: "Gagal Membuka Jendela Cetak", description: "Browser Anda mungkin memblokir pop-up. Mohon izinkan pop-up untuk situs ini.", variant: "destructive" });
            return;
          }
 
@@ -328,7 +338,7 @@ const CetakBuktiDUPageContent = () => {
                console.log('Print command executed.');
              } catch (printError) {
                console.error("Error during print execution:", printError);
-               toast({ title: "Gagal Mencetak", description: "Terjadi kesalahan saat mencoba mencetak.", variant: "destructive" });
+                toast({ title: "Gagal Mencetak", description: "Terjadi kesalahan saat mencoba mencetak.", variant: "destructive" });
                 if (printWindow && !printWindow.closed) printWindow.close();
              } finally {
                  console.log('Restoring original document title.');
@@ -344,39 +354,24 @@ const CetakBuktiDUPageContent = () => {
       }, 50);
    };
 
-     if (authLoading || loading && !data) { // Show loading if auth is loading OR data is loading
-       return (
-           <div className="flex justify-center items-center h-screen">
-               <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-               <span>Memuat data bukti daftar ulang...</span>
-           </div>
-       );
+     if (authLoading || loading) {
+          return (
+              <div className="flex justify-center items-center h-screen">
+                   <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                   <span>Memuat bukti daftar ulang...</span>
+              </div>
+          );
      }
-
-    if (!user && !authLoading) {
-         // This state should ideally not be reached if AuthCheck is effective
-         // It's here as a safeguard
-         return (
-             <div className="flex justify-center items-center h-screen">
-                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                 <span>Mengarahkan...</span>
-             </div>
-         );
-    }
 
     if (error) {
       return <div className="flex justify-center items-center h-screen text-red-600"><p>{error}</p></div>;
     }
 
     if (!data) {
-      return (
-           <div className="flex justify-center items-center h-screen">
-               <p>Data tidak ditemukan atau gagal dimuat.</p>
-           </div>
-      );
+      return <div className="flex justify-center items-center h-screen"><p>Data tidak tersedia.</p></div>;
     }
 
-    // Render the content only if data is available and auth is complete
+    // Render the content only if data is available
     return (
       <div className="p-4 print:p-0 min-h-screen flex flex-col bg-gray-100 print:bg-white">
          <div className="mb-4 flex justify-between items-center no-print max-w-6xl mx-auto w-full">
@@ -388,10 +383,9 @@ const CetakBuktiDUPageContent = () => {
              </Button>
          </div>
         <div className="print-preview-container flex-grow">
-             {/* Pass loaded letterheadUri to the print component */}
-             <div ref={printRef} className="print-container">
-                 <BuktiDaftarUlangPrint data={data} />
-             </div>
+          <div ref={printRef} className="print-container">
+            <BuktiDaftarUlangPrint data={data} />
+          </div>
         </div>
       </div>
     );
@@ -411,9 +405,7 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
      useEffect(() => {
         if (!isClient || authLoading) return;
 
-        // Allow access to print pages even if not logged in *if* coming from admin
-        // This is a temporary workaround; proper token-based auth would be better.
-        const isPrintPage = pathname?.startsWith('/admin/cetak-');
+        const isPrintPage = pathname?.startsWith('/admin/cetak-bukti-du/');
         const isAdminPath = pathname?.startsWith('/admin');
         const isLoginPage = pathname === '/login';
 
@@ -427,6 +419,7 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         }
      }, [isClient, authLoading, user, router, pathname]);
 
+
      if (!isClient || authLoading) {
          return (
              <div className="flex justify-center items-center h-screen">
@@ -436,16 +429,13 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
          );
      }
 
-    // Render children if user exists OR on login page OR on a print page
-    // This allows the print page component itself to handle data loading errors
-    if (user || pathname?.startsWith('/login') || pathname?.startsWith('/admin/cetak-')) {
+    if (user || pathname?.startsWith('/login') || pathname?.startsWith('/admin/cetak-bukti-du/')) {
         return <>{children}</>;
     }
 
     // Fallback for non-user on protected admin pages (should ideally be handled by redirect)
     return null;
 };
-
 
 // Main component that uses the AuthCheck wrapper
 const CetakBuktiDUPage = () => {

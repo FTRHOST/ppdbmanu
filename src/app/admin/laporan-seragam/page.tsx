@@ -1,27 +1,18 @@
-
-
+// src/app/admin/laporan-seragam/page.tsx (Diperbarui)
 'use client';
 
-import type React from 'react';
-import { useState, useEffect } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React from 'react';
+import { useState, useEffect, useCallback } from 'react';  //Add callback
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Printer, Download, Search, Shirt, Users, UserCheck, PersonStanding, Home } from 'lucide-react'; // Added more icons
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-
-// Mock data structure for uniform report item
+// 3.Import Interfaces Types
 interface SeragamReportItem {
   ukuran: string; // S, M, L, XL, etc.
   jenisKelamin: 'Laki-laki' | 'Perempuan' | 'Total'; // Added Total for overall summary
@@ -30,8 +21,7 @@ interface SeragamReportItem {
   batik: number;
   olahraga: number;
 }
-
-// Mock summary stats - replace with actual data fetching
+//4 Now is a const and not a const for is a literal map, not can have literal in other code part
 interface SummaryStats {
     totalPendaftar: number;
     totalDaftarUlang: number;
@@ -39,110 +29,41 @@ interface SummaryStats {
     totalPerempuanDU: number;
 }
 
-const mockSummaryStats: SummaryStats = {
-    totalPendaftar: 125, // Example total registrants
-    totalDaftarUlang: 7, // Total re-registrants (sum of L+P)
-    totalLakiLakiDU: 4, // Example male re-registrants
-    totalPerempuanDU: 3, // Example female re-registrants
-};
-
-
-// Mock raw data - replace with actual data aggregation from daftar ulang records
-// Add more diverse data for testing
-const mockRawData = [
-  // Sample daftar ulang records (subset of fields needed)
-  { id: 101, jenisKelamin: 'Laki-laki', ukuranSeragam: 'L', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: false },
-  { id: 102, jenisKelamin: 'Perempuan', ukuranSeragam: 'M', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: true },
-  { id: 103, jenisKelamin: 'Laki-laki', ukuranSeragam: 'XL', seragamOsis: true, seragamPramuka: false, seragamBatik: true, seragamOlahraga: true },
-  { id: 104, jenisKelamin: 'Laki-laki', ukuranSeragam: 'L', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: true },
-  { id: 105, jenisKelamin: 'Perempuan', ukuranSeragam: 'M', seragamOsis: true, seragamPramuka: true, seragamBatik: false, seragamOlahraga: true },
-  { id: 106, jenisKelamin: 'Perempuan', ukuranSeragam: 'S', seragamOsis: false, seragamPramuka: true, seragamBatik: true, seragamOlahraga: true },
-  { id: 107, jenisKelamin: 'Laki-laki', ukuranSeragam: 'XXL', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: true },
-  { id: 108, jenisKelamin: 'Perempuan', ukuranSeragam: 'L', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: true },
-  { id: 109, jenisKelamin: 'Laki-laki', ukuranSeragam: 'M', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: true },
-];
-
-// Function to process raw data into the report structure
-const processSeragamData = (rawData: any[]): SeragamReportItem[] => {
-  const reportMap: { [key: string]: SeragamReportItem } = {};
-  const ukuranOrder = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'Custom']; // Define order
-
-  // Initialize map entries for all sizes and genders to ensure they exist even if count is 0
-  ukuranOrder.forEach(ukuran => {
-     ['Laki-laki', 'Perempuan'].forEach(jk => {
-         const key = `${ukuran}-${jk}`;
-         reportMap[key] = {
-             ukuran: ukuran,
-             jenisKelamin: jk as 'Laki-laki' | 'Perempuan',
-             osis: 0,
-             pramuka: 0,
-             batik: 0,
-             olahraga: 0,
-         };
-     });
-  });
-
-
-  rawData.forEach(item => {
-    const key = `${item.ukuranSeragam}-${item.jenisKelamin}`;
-    // Only process if the key exists (valid size/gender)
-    if (reportMap[key]) {
-        if (item.seragamOsis) reportMap[key].osis++;
-        if (item.seragamPramuka) reportMap[key].pramuka++;
-        if (item.seragamBatik) reportMap[key].batik++;
-        if (item.seragamOlahraga) reportMap[key].olahraga++;
-    }
-  });
-
-  // Calculate Totals
-  ukuranOrder.forEach(ukuran => {
-       const totalKey = `${ukuran}-Total`;
-       const lakiKey = `${ukuran}-Laki-laki`;
-       const perempuanKey = `${ukuran}-Perempuan`;
-
-       reportMap[totalKey] = {
-           ukuran: ukuran,
-           jenisKelamin: 'Total',
-           osis: (reportMap[lakiKey]?.osis || 0) + (reportMap[perempuanKey]?.osis || 0),
-           pramuka: (reportMap[lakiKey]?.pramuka || 0) + (reportMap[perempuanKey]?.pramuka || 0),
-           batik: (reportMap[lakiKey]?.batik || 0) + (reportMap[perempuanKey]?.batik || 0),
-           olahraga: (reportMap[lakiKey]?.olahraga || 0) + (reportMap[perempuanKey]?.olahraga || 0),
-       };
-   });
-
-
-   // Sort the results based on ukuranOrder and then jenisKelamin
-    return Object.values(reportMap).sort((a, b) => {
-       const indexA = ukuranOrder.indexOf(a.ukuran);
-       const indexB = ukuranOrder.indexOf(b.ukuran);
-       if (indexA !== indexB) return indexA - indexB;
-
-        // Define order for jenisKelamin within each ukuran
-       const jkOrder = ['Laki-laki', 'Perempuan', 'Total'];
-       return jkOrder.indexOf(a.jenisKelamin) - jkOrder.indexOf(b.jenisKelamin);
-   });
-};
-
-
 export default function LaporanSeragamPage() {
   const [reportData, setReportData] = useState<SeragamReportItem[]>([]);
   const [summaryStats, setSummaryStats] = useState<SummaryStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'total' | 'laki' | 'perempuan'>('total');
 
-  // Simulate data fetching and processing
-  useEffect(() => {
-    // TODO: Replace mockRawData and mockSummaryStats with actual API calls
-    const fetchData = async () => {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-      const processedData = processSeragamData(mockRawData);
-      setReportData(processedData);
-      setSummaryStats(mockSummaryStats); // Set mock summary data
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+    // 6 Call Function with useCallback
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('/api/laporan-seragam'); // Change here
+            if (!response.ok) {
+              console.error('HTTP error details:', response.status, response.statusText, await response.text());
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();  // response with two items summaryStats and reportData
+
+            setReportData(result.reportData);
+             setSummaryStats(result.summaryStats);  // Response with new result
+        } catch (error) {
+           console.error('Gagal mengambil data laporan seragam:', error);
+            toast({
+                title: "Gagal Memuat Laporan",
+                description: "Terjadi kesalahan saat mengambil data laporan seragam.",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+       fetchData();   // Call fetchdata function to fetch results
+    }, [fetchData]); // Use function here for dependency
 
   const handleExportExcel = () => {
     // TODO: Implement Excel export logic for the current view (tab)
@@ -157,33 +78,26 @@ export default function LaporanSeragamPage() {
   };
 
   const getFilteredData = (tab: 'total' | 'laki' | 'perempuan'): SeragamReportItem[] => {
-     let dataToFilter = reportData;
-     // Filter out sizes with zero total counts for the 'Total' tab for cleaner display
-     if (tab === 'total') {
-         dataToFilter = reportData.filter(item => {
-             if (item.jenisKelamin === 'Total') {
-                 return item.osis > 0 || item.pramuka > 0 || item.batik > 0 || item.olahraga > 0;
-             }
-             return false; // Only include 'Total' rows in the total tab display data
-         });
-     } else if (tab === 'laki') {
-          dataToFilter = reportData.filter(item => item.jenisKelamin === 'Laki-laki');
-     } else if (tab === 'perempuan') {
-          dataToFilter = reportData.filter(item => item.jenisKelamin === 'Perempuan');
-     }
-      // Filter out rows where all counts are zero for L/P tabs as well
-      return dataToFilter.filter(item => item.osis > 0 || item.pramuka > 0 || item.batik > 0 || item.olahraga > 0);
- };
+      let dataToFilter = reportData;  //ReportData, load here and use
+       if (tab === 'total') {
+            dataToFilter = reportData.filter(item => item.jenisKelamin === 'Total' && (item.osis > 0 || item.pramuka > 0 || item.batik > 0 || item.olahraga > 0)); // No zeros data
+        } else if (tab === 'laki') {
+            dataToFilter = reportData.filter(item => item.jenisKelamin === 'Laki-laki');
+      } else if (tab === 'perempuan') {
+            dataToFilter = reportData.filter(item => item.jenisKelamin === 'Perempuan');
+      }
+        return dataToFilter.filter(item => item.osis > 0 || item.pramuka > 0 || item.batik > 0 || item.olahraga > 0);
+
+  };
 
 
- // Chart data preparation based on active tab
- const chartData = getFilteredData(activeTab).map(item => ({
-     name: item.ukuran,
-     Osis: item.osis,
-     Pramuka: item.pramuka,
-     Batik: item.batik,
-     Olahraga: item.olahraga,
- }));
+ const chartData = getFilteredData(activeTab).map(item => ({   // Now can work with data to types
+        name: item.ukuran,
+        Osis: item.osis,
+        Pramuka: item.pramuka,
+        Batik: item.batik,
+        Olahraga: item.olahraga,
+    }));
 
 
   return (
@@ -196,46 +110,49 @@ export default function LaporanSeragamPage() {
               <Card><CardHeader><CardTitle>Memuat...</CardTitle></CardHeader><CardContent><div className="h-8 bg-muted rounded animate-pulse"></div></CardContent></Card>
               <Card><CardHeader><CardTitle>Memuat...</CardTitle></CardHeader><CardContent><div className="h-8 bg-muted rounded animate-pulse"></div></CardContent></Card>
           </div>
-       ) : summaryStats && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="bg-secondary/30">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Pendaftar</CardTitle>
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                      <div className="text-2xl font-bold">{summaryStats.totalPendaftar}</div>
-                  </CardContent>
-              </Card>
-              <Card className="bg-secondary/30">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Daftar Ulang</CardTitle>
-                      <UserCheck className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                      <div className="text-2xl font-bold">{summaryStats.totalDaftarUlang}</div>
-                  </CardContent>
-              </Card>
-              <Card className="bg-secondary/30">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">DU Laki-laki</CardTitle>
-                      <PersonStanding className="h-4 w-4 text-muted-foreground" /> {/* Icon for Male */}
-                  </CardHeader>
-                  <CardContent>
-                      <div className="text-2xl font-bold">{summaryStats.totalLakiLakiDU}</div>
-                  </CardContent>
-              </Card>
-              <Card className="bg-secondary/30">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">DU Perempuan</CardTitle>
-                      <Home className="h-4 w-4 text-muted-foreground" /> {/* Placeholder Icon for Female */}
-                  </CardHeader>
-                  <CardContent>
-                      <div className="text-2xl font-bold">{summaryStats.totalPerempuanDU}</div>
-                  </CardContent>
-              </Card>
-          </div>
-       )}
+       ) : summaryStats && ( // Check again is not empty data
+
+ <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-secondary/30">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Pendaftar</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{summaryStats.totalPendaftar}</div>
+                </CardContent>
+            </Card>
+            <Card className="bg-secondary/30">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Daftar Ulang</CardTitle>
+                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{summaryStats.totalDaftarUlang}</div>
+                </CardContent>
+            </Card>
+            <Card className="bg-secondary/30">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">DU Laki-laki</CardTitle>
+                    <PersonStanding className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    {/* Check before the value  load data*/}
+                  <div className="text-2xl font-bold">{summaryStats?.totalLakiLakiDU }</div>
+                </CardContent>
+            </Card>
+            <Card className="bg-secondary/30">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">DU Perempuan</CardTitle>
+                    <Home className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    {/* Check value exist with optional operation */}
+                    <div className="text-2xl font-bold">{summaryStats?.totalPerempuanDU}</div>
+                </CardContent>
+            </Card>
+        </div>
+        )}
 
 
       {/* Uniform Report Card */}
@@ -255,7 +172,7 @@ export default function LaporanSeragamPage() {
                    <Download className="mr-2 h-4 w-4" />
                    Export Excel ({activeTab})
                  </Button>
-           </div>
+               </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -315,21 +232,19 @@ export default function LaporanSeragamPage() {
   );
 }
 
-
 // Extracted Table Component for reusability within tabs
 const SeragamTable: React.FC<{ data: SeragamReportItem[]; tabName: string }> = ({ data, tabName }) => {
     const captionText = `Rekap kebutuhan seragam ${tabName === 'total' ? 'total' : tabName === 'laki' ? 'laki-laki' : 'perempuan'}.`;
 
     // Calculate column totals
-     const totals = data.reduce((acc, item) => {
+     const totals = React.useMemo(() => data.reduce((acc, item) => { //Use Recalculate on change for data performance
          acc.osis += item.osis;
          acc.pramuka += item.pramuka;
          acc.batik += item.batik;
          acc.olahraga += item.olahraga;
          acc.totalPcs += item.osis + item.pramuka + item.batik + item.olahraga;
          return acc;
-     }, { osis: 0, pramuka: 0, batik: 0, olahraga: 0, totalPcs: 0 });
-
+     }, { osis: 0, pramuka: 0, batik: 0, olahraga: 0, totalPcs: 0 }), [data]); // and Add memo
 
     return (
         <Table>
@@ -383,4 +298,3 @@ const SeragamTable: React.FC<{ data: SeragamReportItem[]; tabName: string }> = (
         </Table>
     );
 };
-

@@ -1,3 +1,4 @@
+// src/app/admin/laporan-sekolah/page.tsx (Diperbarui)
 'use client';
 
 import type React from 'react';
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Printer, Download, Search, School } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { toast } from '@/hooks/use-toast';
 
 // Mock data structure for report by school
 interface SekolahReport {
@@ -24,32 +26,37 @@ interface SekolahReport {
   jumlahDaftarUlang: number;
 }
 
-// Mock data - replace with actual data aggregation from DB
-const mockData: SekolahReport[] = [
-  { namaSekolah: 'MTs N 1 Batang', jumlahPendaftar: 35, jumlahDaftarUlang: 25 },
-  { namaSekolah: 'SMP N 2 Banyuputih', jumlahPendaftar: 28, jumlahDaftarUlang: 15 },
-  { namaSekolah: 'MTs Al Hidayah', jumlahPendaftar: 22, jumlahDaftarUlang: 18 },
-  { namaSekolah: 'SMP Islam Terpadu', jumlahPendaftar: 15, jumlahDaftarUlang: 10 },
-  { namaSekolah: 'SMP N 1 Subah', jumlahPendaftar: 12, jumlahDaftarUlang: 9 },
-  { namaSekolah: 'MTs YPI Banyuputih', jumlahPendaftar: 8, jumlahDaftarUlang: 5 },
-  { namaSekolah: 'Lainnya', jumlahPendaftar: 5, jumlahDaftarUlang: 3 }, // Aggregate smaller schools
-];
+// Remove mock data
+// const mockData: SekolahReport[] = [ ... ];
 
 export default function LaporanSekolahPage() {
   const [reportData, setReportData] = useState<SekolahReport[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Simulate data fetching and aggregation
+  //  Replace with actual API call to fetch and aggregate data by sekolahAsal
   useEffect(() => {
-    // TODO: Replace with actual API call to fetch and aggregate data by sekolahAsal
     const fetchData = async () => {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-      // Sort data by jumlahPendaftar descending for better chart readability
-      const sortedData = mockData.sort((a, b) => b.jumlahPendaftar - a.jumlahPendaftar);
-      setReportData(sortedData);
-      setLoading(false);
+      try {
+        const response = await fetch('/api/laporan-sekolah'); // Call the API route
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: SekolahReport[] = await response.json();
+        // Sort data by jumlahPendaftar descending for better chart readability
+        const sortedData = data.sort((a, b) => b.jumlahPendaftar - a.jumlahPendaftar);
+        setReportData(sortedData);
+      } catch (error) {
+        console.error('Gagal mengambil data laporan sekolah:', error);
+         toast({
+             title: "Gagal Memuat Laporan",
+             description: "Terjadi kesalahan saat mengambil data laporan sekolah.",
+             variant: "destructive",
+         });
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);

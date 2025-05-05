@@ -8,6 +8,8 @@ import { mockPendaftarData, type Pendaftar } from '@/app/admin/data-pendaftar/pa
 import { mockPesertaDaftarUlangData, type PesertaDaftarUlang } from '@/app/admin/peserta-daftar-ulang/page'; // Import mock daftar ulang data and type
 import { isToday } from 'date-fns'; // Import date-fns helper
 
+
+
 interface DashboardStats {
   totalPendaftar: number;
   sudahDaftarUlang: number;

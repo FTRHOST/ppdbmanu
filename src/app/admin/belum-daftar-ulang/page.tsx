@@ -42,14 +42,24 @@ export default function BelumDaftarUlangPage() {
   // Simulate data fetching
   useEffect(() => {
     // TODO: Replace with actual API call to fetch pendaftar with status 'Belum Daftar Ulang'
-    const fetchData = async () => {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-      setPeserta(mockData);
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch('/api/peserta-daftar-ulang?status=Belum');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data: Pendaftar[] = await response.json();
+          setPeserta(data);
+        } catch (error) {
+          console.error('Gagal mengambil data peserta daftar ulang:', error);
+          alert('Terjadi kesalahan saat mengambil data peserta daftar ulang.');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+      }, []);
 
 
  const handleExportExcel = () => {

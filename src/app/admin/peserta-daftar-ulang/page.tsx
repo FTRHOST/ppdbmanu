@@ -30,6 +30,14 @@ import { id } from 'date-fns/locale'; // Import Indonesian locale
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils'; // Import cn utility
 
+// Mock data - replace with actual data fetching (filter pendaftar based on statusDaftarUlang='Sudah') - Export data
+export const mockPesertaDaftarUlangData: PesertaDaftarUlang[] = [
+  { id: 101, pendaftarId: 1, nomorPendaftaran: 'A-2526/0001', nomorDaftarUlang: 'DU-1', nama: 'Ahmad Fauzi', sekolahAsal: 'MTs N 1 Batang', tanggalDaftarUlang: '2024-07-15', ukuranSeragam: 'L' },
+  { id: 102, pendaftarId: 3, nomorPendaftaran: 'A-2526/0003', nomorDaftarUlang: 'DU-2', nama: 'Citra Lestari', sekolahAsal: 'MTs Al Hidayah', tanggalDaftarUlang: '2024-07-15', ukuranSeragam: 'M' },
+  { id: 103, pendaftarId: 6, nomorPendaftaran: 'A-2526/0006', nomorDaftarUlang: 'DU-3', nama: 'Fitri Handayani', sekolahAsal: 'SMP N 1 Subah', tanggalDaftarUlang: format(new Date(), 'yyyy-MM-dd'), ukuranSeragam: 'XL' }, // Today
+  // Add more mock data if needed for dashboard testing
+];
+
 // Mock data structure - adjust based on actual daftar ulang data
 export interface PesertaDaftarUlang { // Export interface
   id: number; // Unique DB ID for daftar ulang record
