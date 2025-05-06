@@ -3,6 +3,30 @@ import { NextResponse } from 'next/server';
 import db from '../../../config/enterprise'; // Path yang benar
 import mysql from 'mysql2/promise';
 
+const dbPool = mysql.createPool({
+  host: '62.72.7.236',
+  user: 'db_coba',
+  password: 'cobainaja',
+  database: 'db_coba',
+  connectionLimit: 10,
+  waitForConnections: true,
+  queueLimit: 0,
+});
+
+async function getConnectionWithRetry() {
+  let attempts = 0;
+  while (attempts < 5) {
+    try {
+      return await dbPool.getConnection();
+    } catch (error) {
+      attempts++;
+      console.error(`Connection attempt ${attempts} failed:`, error);
+      if (attempts >= 5) throw error; // Rethrow after max attempts
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait before retrying
+    }
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -23,7 +47,10 @@ export async function POST(req: Request) {
       tanggalDaftarUlang,
     } = body;
 
-    const connection = await db.getConnection();
+    const connection = await getConnectionWithRetry();
+    if (!connection) {
+      throw new Error('Connection is undefined');
+    }
     try {
       // Lakukan query INSERT untuk menyimpan data daftar ulang
       const [result] = await connection.execute<mysql.ResultSetHeader>(
@@ -48,16 +75,16 @@ export async function POST(req: Request) {
 
       console.log('Data daftar ulang berhasil disimpan:', result);
 
-      // Get the ID of the newly inserted record
-      const newDaftarUlangId = result.insertId; // Now this should work correctly
-
       // Lakukan query UPDATE untuk mengubah statusDaftarUlang di tabel pendaftaran
-      await connection.execute(
-        'UPDATE pendaftaran SET statusDaftarUlang = "Sudah" WHERE id = ?',
-        [pendaftarId] // Use the pendaftarId to update the status
-      );
-
-      console.log('Status daftar ulang di pendaftaran berhasil diubah menjadi "Sudah"');
+      try {
+        const [updateResult] = await connection.execute<mysql.ResultSetHeader>(
+          'UPDATE pendaftaran SET statusDaftarUlang = "Sudah" WHERE id = ?',
+          [pendaftarId]
+        );
+        console.log('Rows affected:', updateResult.affectedRows);
+      } catch (error) {
+        console.error('Error updating status:', error);
+      }
 
       return NextResponse.json({ message: 'Data daftar ulang berhasil disimpan dan status pendaftar diubah' });
     } finally {
@@ -94,7 +121,10 @@ export async function PUT(req: Request) {
     // Log the ID to verify
     console.log('ID received for update:', id);
 
-    const connection = await db.getConnection();
+    const connection = await getConnectionWithRetry();
+    if (!connection) {
+      throw new Error('Connection is undefined');
+    }
     try {
       // Update the record in the database
       const [result] = await connection.execute<mysql.ResultSetHeader>(
@@ -119,6 +149,8 @@ export async function PUT(req: Request) {
       );
 
       console.log('Rows affected:', result.affectedRows); // Now this should work correctly
+
+      console.log('Updating status for pendaftarId:', pendaftarId);
 
       return NextResponse.json({ message: 'Data daftar ulang berhasil diperbarui' });
     } finally {

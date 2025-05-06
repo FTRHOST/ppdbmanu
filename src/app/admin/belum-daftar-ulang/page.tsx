@@ -17,13 +17,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Printer, Download, Search, AlertCircle } from 'lucide-react';
 import Link from 'next/link'; // Import Link for navigation
 
-// Mock data structure - reuse Pendaftar interface from data-pendaftar
+// Define the Pendaftar interface
 interface Pendaftar {
   id: number; // Unique DB ID
   nomorPendaftaran: string;
   nama: string;
   sekolahAsal: string;
   noHp?: string; // Add phone number if available and needed for follow-up
+  nomorDaftarUlang?: string; // Optional nomorDaftarUlang
 }
 
 // Mock data - replace with actual data fetching (filter pendaftar based on statusDaftarUlang='Belum')
@@ -33,51 +34,47 @@ const mockData: Pendaftar[] = [
  { id: 5, nomorPendaftaran: 'A-2526/0005', nama: 'Eko Prasetyo', sekolahAsal: 'MTs N 1 Batang', noHp: '081234567894' },
 ];
 
-
 export default function BelumDaftarUlangPage() {
   const [peserta, setPeserta] = useState<Pendaftar[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Simulate data fetching
+  // Use effect to fetch data from the API
   useEffect(() => {
-    // TODO: Replace with actual API call to fetch pendaftar with status 'Belum Daftar Ulang'
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          const response = await fetch('/api/peserta-daftar-ulang?status=Belum');
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data: Pendaftar[] = await response.json();
-          setPeserta(data);
-        } catch (error) {
-          console.error('Gagal mengambil data peserta daftar ulang:', error);
-          alert('Terjadi kesalahan saat mengambil data peserta daftar ulang.');
-        } finally {
-          setLoading(false);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/peserta-daftar-ulang'); // Call API route
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      };
-      fetchData();
-      }, []);
+        const data: Pendaftar[] = await response.json();
+        setPeserta(data); // Set the fetched data
+      } catch (error) {
+        console.error('Gagal mengambil data peserta daftar ulang:', error);
+        alert('Terjadi kesalahan saat mengambil data peserta daftar ulang.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-
- const handleExportExcel = () => {
-    // TODO: Implement Excel export logic for this specific list
+  const handleExportExcel = () => {
     console.log('Exporting Belum Daftar Ulang to Excel...');
-     alert('Fitur export Excel belum diimplementasikan.');
+    alert('Fitur export Excel belum diimplementasikan.');
   };
 
-   const handlePrintTable = () => {
-     // TODO: Implement table print logic for this specific list
-     console.log('Printing Belum Daftar Ulang table...');
-     window.print(); // Basic browser print
-   };
+  const handlePrintTable = () => {
+    console.log('Printing Belum Daftar Ulang table...');
+    window.print(); // Basic browser print
+  };
 
   const filteredData = peserta.filter(item =>
-    item.nomorPendaftaran.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.sekolahAsal.toLowerCase().includes(searchTerm.toLowerCase())
+    !item.nomorDaftarUlang && // Exclude those with nomorDaftarUlang
+    (item.nomorPendaftaran.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     item.sekolahAsal.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -88,32 +85,32 @@ export default function BelumDaftarUlangPage() {
             <AlertCircle className="text-yellow-600" /> Peserta Belum Daftar Ulang
           </CardTitle>
           <CardDescription>Daftar peserta didik yang telah mendaftar namun belum menyelesaikan proses daftar ulang.</CardDescription>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
-              <div className="relative w-full md:w-1/3">
-                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                 <Input
-                   type="search"
-                   placeholder="Cari peserta..."
-                   value={searchTerm}
-                   onChange={(e) => setSearchTerm(e.target.value)}
-                   className="pl-8 w-full"
-                 />
-              </div>
-              <div className="flex gap-2">
-                 <Button variant="outline" size="sm" onClick={handlePrintTable}>
-                   <Printer className="mr-2 h-4 w-4" />
-                   Cetak Tabel
-                 </Button>
-                 <Button variant="outline" size="sm" onClick={handleExportExcel}>
-                   <Download className="mr-2 h-4 w-4" />
-                   Export Excel
-                 </Button>
-               </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
+            <div className="relative w-full md:w-1/3">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Cari peserta..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 w-full"
+              />
             </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handlePrintTable}>
+                <Printer className="mr-2 h-4 w-4" />
+                Cetak Tabel
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                <Download className="mr-2 h-4 w-4" />
+                Export Excel
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
-             <p className="text-center text-muted-foreground">Memuat data...</p>
+            <p className="text-center text-muted-foreground">Memuat data...</p>
           ) : (
             <Table>
               <TableHeader>
@@ -122,8 +119,8 @@ export default function BelumDaftarUlangPage() {
                   <TableHead>Nomor Pendaftaran</TableHead>
                   <TableHead>Nama Lengkap</TableHead>
                   <TableHead>Sekolah Asal</TableHead>
-                   <TableHead>No. HP (Jika Ada)</TableHead>
-                   <TableHead className="text-right">Aksi Cepat</TableHead>
+                  <TableHead>No. HP (Jika Ada)</TableHead>
+                  <TableHead className="text-right">Aksi Cepat</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -136,13 +133,11 @@ export default function BelumDaftarUlangPage() {
                       <TableCell>{item.sekolahAsal}</TableCell>
                       <TableCell>{item.noHp || '-'}</TableCell>
                       <TableCell className="text-right">
-                         {/* Add a button/link to directly go to input daftar ulang for this student */}
-                         <Button asChild variant="link" size="sm" className="text-primary hover:underline">
-                            <Link href={`/admin/input-daftar-ulang?pendaftarId=${item.nomorPendaftaran}`}>
-                                Input Daftar Ulang
-                            </Link>
-                         </Button>
-                         {/* Maybe add follow-up actions like 'Send Reminder' later */}
+                        <Button asChild variant="link" size="sm" className="text-primary hover:underline">
+                          <Link href={`/admin/input-daftar-ulang?pendaftarId=${item.nomorPendaftaran}`}>
+                            Input Daftar Ulang
+                          </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -156,7 +151,7 @@ export default function BelumDaftarUlangPage() {
               </TableBody>
               <TableCaption>Total {filteredData.length} peserta belum daftar ulang.</TableCaption>
             </Table>
-           )}
+          )}
         </CardContent>
       </Card>
     </div>

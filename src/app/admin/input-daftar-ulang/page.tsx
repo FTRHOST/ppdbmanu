@@ -327,7 +327,7 @@ export default function InputDaftarUlangPage() {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
-                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                          <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
                         </FormControl>
                         <div className="space-y-1 leading-none">
                           <FormLabel className="font-normal">Piagam (Jika Ada)</FormLabel>
@@ -341,11 +341,11 @@ export default function InputDaftarUlangPage() {
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
-                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                          <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
                         </FormControl>
-                         <div className="space-y-1 leading-none">
-                           <FormLabel className="font-normal">SKTM / Rekom PRNU (Jika Ada)</FormLabel>
-                         </div>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="font-normal">SKTM / Rekom PRNU (Jika Ada)</FormLabel>
+                        </div>
                       </FormItem>
                     )}
                   />

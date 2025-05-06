@@ -35,14 +35,14 @@ export interface Pendaftar { // Export interface
   tanggalDaftar: Date; // Added registration date
 }
 
-// Mock data - replace with actual data fetching - Export mockData
+//Mock data - replace with actual data fetching - Export mockData
 export const mockPendaftarData: Pendaftar[] = [
-  { id: 1, nomorPendaftaran: 'A-2526/0001', nama: 'Ahmad Fauzi', sekolahAsal: 'MTs N 1 Batang', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date('2024-07-15') },
-  { id: 2, nomorPendaftaran: 'A-2526/0002', nama: 'Budi Santoso', sekolahAsal: 'SMP N 2 Banyuputih', statusDaftarUlang: 'Belum', tanggalDaftar: new Date('2024-07-16') },
-  { id: 3, nomorPendaftaran: 'A-2526/0003', nama: 'Citra Lestari', sekolahAsal: 'MTs Al Hidayah', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date() }, // Today
-  { id: 4, nomorPendaftaran: 'A-2526/0004', nama: 'Dewi Anggraini', sekolahAsal: 'SMP Islam Terpadu', statusDaftarUlang: 'Belum', tanggalDaftar: new Date() }, // Today
-  { id: 5, nomorPendaftaran: 'A-2526/0005', nama: 'Eko Prasetyo', sekolahAsal: 'MTs N 1 Batang', statusDaftarUlang: 'Belum', tanggalDaftar: new Date('2024-07-17') },
-  { id: 6, nomorPendaftaran: 'A-2526/0006', nama: 'Fitri Handayani', sekolahAsal: 'SMP N 1 Subah', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date() }, // Today
+  { id: 1, nomorPendaftaran: 'A-2526/0001', nama: 'Ahmad Fauzi', sekolah: 'MTs N 1 Batang', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date('2024-07-15') },
+  { id: 2, nomorPendaftaran: 'A-2526/0002', nama: 'Budi Santoso', sekolah: 'SMP N 2 Banyuputih', statusDaftarUlang: 'Belum', tanggalDaftar: new Date('2024-07-16') },
+  { id: 3, nomorPendaftaran: 'A-2526/0003', nama: 'Citra Lestari', sekolah: 'MTs Al Hidayah', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date() }, // Today
+  { id: 4, nomorPendaftaran: 'A-2526/0004', nama: 'Dewi Anggraini', sekolah: 'SMP Islam Terpadu', statusDaftarUlang: 'Belum', tanggalDaftar: new Date() }, // Today
+  { id: 5, nomorPendaftaran: 'A-2526/0005', nama: 'Eko Prasetyo', sekolah: 'MTs N 1 Batang', statusDaftarUlang: 'Belum', tanggalDaftar: new Date('2024-07-17') },
+  { id: 6, nomorPendaftaran: 'A-2526/0006', nama: 'Fitri Handayani', sekolah: 'SMP N 1 Subah', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date() }, // Today
 ];
 
 export default function DataPendaftarPage() {

@@ -64,12 +64,24 @@ export default function PesertaDaftarUlangPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/peserta-daftar-ulang?status=Sudah'); // Call API route
+        const response = await fetch('/api/peserta-daftar-ulang'); // Call API route
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data: PesertaDaftarUlang[] = await response.json();
-        setPeserta(data);
+
+        // Filter out entries with null values
+        const filteredData = data.filter(item => 
+          item.pendaftarId !== null &&
+          item.nomorPendaftaran !== null &&
+          item.nomorDaftarUlang !== null &&
+          item.nama !== null &&
+          item.sekolahAsal !== null &&
+          item.tanggalDaftarUlang !== null &&
+          item.ukuranSeragam !== null
+        );
+
+        setPeserta(filteredData);
       } catch (error) {
         console.error('Gagal mengambil data peserta daftar ulang:', error);
         toast({

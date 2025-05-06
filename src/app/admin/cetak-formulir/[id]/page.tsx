@@ -236,7 +236,7 @@ const CetakFormulirPageContent = () => {
     return (
       <div className="bg-gray-100 p-4 print:bg-white print:p-0">
          <div className="mb-4 flex justify-between items-center no-print max-w-4xl mx-auto">
-             <Button variant="outline" size="sm" onClick={() => router.back()}>
+             <Button variant="outline" size="sm" onClick={() => router.push('/admin/data-pendaftar')}>
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
              </Button>
            <Button onClick={handlePrint} size="sm">
